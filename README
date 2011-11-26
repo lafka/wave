@@ -1,0 +1,58 @@
+	__        __                ____  _   _ ____  
+	\ \      / /_ ___   _____  |  _ \| | | |  _ \ 
+	 \ \ /\ / / _` \ \ / / _ \ | |_) | |_| | |_) |
+	  \ V  V / (_| |\ V /  __/ |  __/|  _  |  __/ 
+	   \_/\_/ \__,_| \_/ \___| |_|   |_| |_|_|    
+
+	A quick and uncluttered way to setup a MVC-like enviroment in PHP
+	it consists of packages with different components beneath. 
+	Each component can be though of as a controller with corresponding
+	views, there is no models as this is only used to create structure
+	and it's up to you to fill in the blanks.
+
+
+	INSTALL    ======================================================
+
+	To install, pull this down to your web server with the name fwt.
+
+	$ git clone https://lafka@github.com/lafka/Wave.git fwt
+
+	Create a link of the index file
+	
+	$ ln -P fwt/index.php .
+
+
+	Add the rewrite rules you need for nginx it could look like this:
+	
+	    if ( !-e $request_filename )
+	    {
+	        rewrite ^/(.*)$ /index.php last;
+	    }
+
+                                             
+	FIRST STEPS   ======================================================
+
+	Create a new package with some components:
+
+	mkdir -p mypkg/{hello,goodbye}
+
+	Create the controller and default view for each of them:
+	
+	touch !$/{default,controller}.php
+
+	A controller must be in namespace that corelates to the path, so your
+	controller would be named \MyPkg\{Hello,Goodbye}\Controller. The cont-
+	roller would also need to implement \Fwt\Controller\Iface. A stripped
+	controller would look something like this:
+
+	namespace MyPkg\Hello;
+	use Fwt\Controller\Abstraction, Fwt\Controller\Iface;
+
+	class Controller extends Abstraction implements Iface
+	{
+		
+	}
+
+	To add a new view you would just need to create the file and it will
+	be accessible.
+
