@@ -40,6 +40,8 @@
 
 namespace Fwt\Controller;
 
+use  \Fwt\Base;
+
 interface Iface
 {
 	
@@ -52,9 +54,10 @@ interface Iface
 	 *
 	 * @param array $uri to dispatch
 	 * @param array $component cached information from base 
+	 * @param Base  $base The base object
 	 * @since 0.1
 	 */
-	public function __construct ( array $uri, array $component );
+	public function __construct ( array $uri, array $component, Base $base );
 
 	/**
 	 * Get the current view
@@ -78,4 +81,11 @@ interface Iface
 	 * @return boolean true if view is found, false otherwise
 	 */
 	public function hasView ( $view );
+	
+	/**
+	 * Initialize the controller to make sure we are abel to output the page
+	 * 
+	 * @return boolean True if all went well, false otherwise
+	 */
+	public function init ();
 }

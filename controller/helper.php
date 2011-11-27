@@ -91,8 +91,8 @@ abstract class Helper
 
 		if ( class_exists( $controller ) )
 		{
-//			var_dump( $controller, $parts, $targetpackage );
-			return new $controller( $parts, $targetpackage['components'][$parts['controller']] );
+			$controller = new $controller( $parts, $targetpackage['components'][$parts['controller']], $base );
+			return $controller;
 		}
 
 		throw new RuntimeException( __METHOD__ . " could not create new controller factory for '{$controller}'" );
@@ -131,6 +131,35 @@ abstract class Helper
 		$uri['view']       = ( count($uri) > 1 ) ? array_shift( $uri ) : 'default';
 
 		return $uri;
+	}
+		
+	/**
+	 * Load error module
+	 * 
+	 * @param integer $statusCode HTTP status code
+	 * @param \Fwt\Controller\Iface $controller The original controller
+	 * @return void
+	 */
+	public static function loadError( $statusCode, \Fwt\Controller\Iface $controller )
+	{
+		if ( $controller->hasView( $statusCode ) )
+		{
+			$controller->loadView( $statusCode );
+		} else {
+			//	Load default error package view
+			$a = array(
+				'controller' => 'error',
+				'view'       => $statusCode
+			);
+			
+			$proxy = \Fwt\Controller\Helper::factory( $a, $controller->base );
+			if ( $proxy->hasView( $statusCode ) )
+			{
+				$proxy->loadView( $statusCode );
+			} else {
+				$proxy->loadView( 404 );
+			}
+		}
 	}
 
 }

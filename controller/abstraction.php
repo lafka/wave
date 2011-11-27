@@ -40,7 +40,7 @@
 
 namespace Fwt\Controller;
 
-use UnexpectedValueException;
+use UnexpectedValueException, \Fwt\Base;
 
 abstract class Abstraction 
 {
@@ -64,6 +64,13 @@ abstract class Abstraction
 	protected $_component;
 
 	protected $_request;
+	
+	/**
+	 * The base kernel object
+	 * 
+	 * @var \Fwt\Base
+	 */
+	public $base;
 
 	/**
 	 * Set basic information about component
@@ -71,21 +78,18 @@ abstract class Abstraction
 	 *
 	 * @param array $parts URI broken up
 	 * @param array $comp the information about self
+	 * @param Base  $base The base object
 	 * @return void
 	 */
-	public function __construct ( array $parts, array $comp )
+	public function __construct ( array $parts, array $comp, Base $base  )
 	{
 		$this->_package		= $comp['package'];
-		unset( $comp['package'] );
 		$this->_view		= $parts['view'];
 		$this->_component	= $comp;
-		$this->_request = $parts;
-		unset ( $comp, $parts );
-
-		if ( is_callable( array( $this, 'init' ) ) )
-		{
-			$this->init();
-		}
+		$this->_request     = $parts;
+		$this->base         = $base;
+				
+		unset ( $comp, $parts, $base );
 	}
 
 	/**
@@ -104,6 +108,12 @@ abstract class Abstraction
 		return $this->_view;	
 	}
 
+	/**
+	 * Check if a given view exists within a controller
+	 * 
+	 * @param string $view The view to check
+	 * @return boolean True if view is available
+	 */
 	public function hasView ( $view = Iface::USE_CURRENT_VIEW )
 	{
 		if ( $view === Iface::USE_CURRENT_VIEW )
@@ -119,6 +129,15 @@ abstract class Abstraction
 		return true;
 	}
 
+	/**
+	 * Include a view
+	 * 
+	 * Loads up the given view if it exists
+	 * 
+	 * @param string $view The view to use
+	 * @return void
+	 * @throws UnexpectedValueException
+	 */
 	public function loadView ( $view = \Fwt\Controller\Iface::USE_CURRENT_VIEW )
 	{
 		if ( $view === Iface::USE_CURRENT_VIEW )
@@ -133,6 +152,16 @@ abstract class Abstraction
 		}
 
 		throw new UnexpectedValueException( __METHOD__ . " could not load view {$view}, it was not found in the {$this->_package}.{$this->_component['component']} package" );
+	}
+	
+	/**
+	 * By default initialization is not required
+	 * 
+	 * @return boolean True
+	 */
+	public function init ()
+	{
+		return true;
 	}
 }
 

@@ -2,7 +2,7 @@
 /**
  * Wave PHP 
  *
- * Copyright (c) 2010 - 2011 Frengstad Web Teknologi and contributors  
+ * Copyright (c) 2011, 2010 - 2011 Frengstad Web Teknologi and contributors
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without modification, are
@@ -29,57 +29,17 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Index file for loading requets 
+ * 404 not found error page
  *
- * @package	  wave 
- * @version	  0.1 
- * @copyright Frengstad Web Teknologi	
- * @author	  Olav Frengstad <olav@fwt.no>
- * @license	  http://www.opensource.org/licenses/bsd-license.php BSD License
+ * @package     wave
+ * @version     0.1 
+ * @copyright   Frengstad Web Teknologi
+ * @author      Olav Frengstad <olav@fwt.no>
+ * @license     http://www.opensource.org/licenses/bsd-license.php BSD License
  */
 
-namespace Fwt;
-use \Fwt\Controller\Helper, Exception;
+header("Status: 403");
+$this->_title = 'You shoulden\'t be here!';
+$this->_error = 'It seems like you tried to go a place where you don\'t have access. Please authorize yourself to continue';
 
-define( '__DS__',          DIRECTORY_SEPARATOR );
-define( '__ROOT__',        __DIR__ . __DS__ );
-define( '__DEBUG_ENABLED', true );
-
-/**
- * @todo Make base derive from multiple
- */
-include 'fwt/base.php';
-
-try {
-	/**
-	 * @todo remove singleton as it should not be
-	 */
-	$base = new Base();
-
-	$parts	  = Helper::process( $_SERVER['REQUEST_URI'] );
-	$controller = Helper::factory( $parts, $base );
-
-	include 'presentation/header.php';
-
-	if ( ! $controller->hasView( $parts['view'] ) )
-	{
-		Helper::loadError( 404, $controller );
-	} else {
-		//	If something wrong happend this means we shouldent load the view
-		//	this is a hack to stop unauthorized requests and similar.
-		//	@todo This should atleast check if some view has been loaded
-		if ( true === $controller->init() )
-		{
-			$controller->loadView( $parts['view'] );
-		}
-	}
-
-	include 'presentation/footer.php';
-} catch ( Exception $e ) {
-	header( "Status: 500" );
-	echo "<pre>
-	{$e->getMessage()}<hr />
-	in {$e->getFile()} on line {$e->getLine()}
-	</pre><hr /><pre>{$e->getTraceAsString()}</pre>";
-}
-
+include 'default.php';
