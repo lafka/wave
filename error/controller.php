@@ -40,7 +40,9 @@
 
 namespace Fwt\Error;
 
-class Controller extends \Fwt\Controller\Abstraction implements \Fwt\Controller\Iface
+use \Fwt\Controller\Simple\Abstraction, \Fwt\Controller\Iface;
+
+class Controller extends Abstraction implements Iface
 {
 	protected $_title;
 	protected $_error;

@@ -38,76 +38,19 @@
  * @license     http://www.opensource.org/licenses/bsd-license.php BSD License
  */
 
-namespace Fwt\Controller;
+namespace Fwt\Controller\Distinct;
 
-use UnexpectedValueException, \Fwt\Base;
+use \UnexpectedValueException, \Fwt\Base, \Fwt\Controller\Simple,
+    \Fwt\Controller\Iface;
 
-abstract class Abstraction 
+abstract class Abstraction extends Simple\Abstraction 
 {
 	/**
-	 * Name of package
+	 * The name of the subfolder where views are included
+	 *
 	 * @var string
 	 */
-	protected $_package;
-
-	/**
-	 * The current view
-	 * @var string
-	 */
-	protected $_view;
-
-	/**
-	 * Information about component
-	 *
-	 * @var array
-	 */
-	protected $_component;
-
-	protected $_request;
-	
-	/**
-	 * The base kernel object
-	 * 
-	 * @var \Fwt\Base
-	 */
-	public $base;
-
-	/**
-	 * Set basic information about component
-	 *
-	 *
-	 * @param array $parts URI broken up
-	 * @param array $comp the information about self
-	 * @param Base  $base The base object
-	 * @return void
-	 */
-	public function __construct ( array $parts, array $comp, Base $base  )
-	{
-		$this->_package		= $comp['package'];
-		$this->_view		= $parts['view'];
-		$this->_component	= $comp;
-		$this->_request     = $parts;
-		$this->base         = $base;
-				
-		unset ( $comp, $parts, $base );
-	}
-
-	/**
-	 * Get current view
-	 *
-	 * @return string view name
-	 * @throws \UnexpectedValueException when no view is set
-	 */
-	public function currentView ()
-	{
-		if ( empty( $this->_view ) )
-		{
-			throw new UnexpectedValueException( __METHOD__ . ' there is no view set, please specify more accurate' );
-		}
-
-		return $this->_view;	
-	}
-
+	const SUBFOLDER = "views";
 	/**
 	 * Check if a given view exists within a controller
 	 * 
@@ -121,12 +64,9 @@ abstract class Abstraction
 			$view = $this->currentView();
 		}
 
-		if ( ! array_key_exists( $view, $this->_component['views'] ) )
-		{
-			return false;
-		}
-
-		return true;
+		return is_readable( buildpath( __ROOT__, $this->_component['package'], 
+		                              $this->_component['component'], static::SUBFOLDER, 
+		                              "{$view}.php" ) );
 	}
 
 	/**
@@ -144,10 +84,11 @@ abstract class Abstraction
 		{
 			$view = $this->currentView();
 		} 
-		
-		if ($this->hasView( $view ) )
+
+		if ( $this->hasView( $view ) )
 		{
-			include __ROOT__ . $this->_package . __DS__ . $this->_component['component'] . __DS__ . $view . '.php';
+			include buildpath( __ROOT__, $this->_package, $this->_component['component'],
+			                   static::SUBFOLDER, "{$view}.php" );
 			return;
 		}
 
