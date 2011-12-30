@@ -5,7 +5,7 @@
  * Copyright (c) 2010 - 2011 Frengstad Web Teknologi and contributors
  * All rights reserved
  *
- * 403 Forbidden page 
+ * 401 Unauthorized error 
  *
  * @package     wave
  * @version     0.1 
@@ -14,8 +14,8 @@
  * @license     http://www.opensource.org/licenses/bsd-license.php BSD License
  */
 
-header("HTTP/1.1 403 Forbidden");
+header("HTTP/1.1 401 Unauthorized");
 $this->_title = 'You shoulden\'t be here!';
-$this->_error = 'You don\'t have the correct privileges to access this page.';
+$this->_error = 'It seems like you tried to go a place where you don\'t have access. Please authorize yourself to continue';
 
 include 'default.php';
