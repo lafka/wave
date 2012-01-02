@@ -45,15 +45,10 @@ define( '__DS__',          DIRECTORY_SEPARATOR );
 define( '__ROOT__',        __DIR__ . __DS__ );
 define( '__DEBUG_ENABLED', true );
 
-/**
- * @todo Make base derive from multiple
- */
-include 'fwt/base.php';
+include __ROOT__ . 'fwt/Base.php';
+
 
 try {
-	/**
-	 * @todo remove singleton as it should not be
-	 */
 	$base = new Base();
 
 	$parts	  = Helper::process( $_SERVER['REQUEST_URI'] );
@@ -68,10 +63,7 @@ try {
 		//	If something wrong happend this means we shouldent load the view
 		//	this is a hack to stop unauthorized requests and similar.
 		//	@todo This should atleast check if some view has been loaded
-		if ( true === $controller->init() )
-		{
-			$controller->loadView( $parts['view'] );
-		}
+		$controller->loadView( $parts['view'] );
 	}
 
 	include 'presentation/footer.php';

@@ -46,6 +46,16 @@ class Base
 	/**
 	 * All available packages
 	 *
+	 * A 2-dimensional array with following structure: 
+	 *
+	 * package => [ folder1 => [ comp1, comp2, .. n ],
+	 *              folder2 => [ comp4, comp1, .. n ] ]
+	 *
+	 * Where 'package' is the first part of folder name, and 'folder*' is the
+	 * actual folder name. So wave-auth/user will become this:
+	 *
+	 * wave => [ wave-auth => [ user ] ].
+	 *
 	 * @var array
 	 */
 	protected $_packages = array();
@@ -59,62 +69,62 @@ class Base
 	 */
 	public function __construct ()
 	{
+		require 'lib.php';
 		//	Prioritize our autoloader
 		spl_autoload_register( array( __CLASS__, 'autoload' ), true, true );
 
-		$dir = new DirectoryIterator( __ROOT__ );
+		$dir = new DirectoryIterator( __ROOT__ ); 
 
 		foreach ( $dir as $item )
 		{
 			if ( $item->isDir() && 0 !== strpos( $item->getFilename(), '.' ) )
 			{
-				$this->_packages[ (string) $item->getFilename() ] = $this->package( $item, true );
-//				//	Inject additional code
-//				if ( is_dir( $item->getPathname() . __DS__ . 'init' ) )
-//				{
-//					$xdir = new \RecursiveDirectoryIterator( $item->getPathname() . __DS__ . 'init' );
-//
-//					foreach ( $xdir as $child )
-//					{
-//						if ( $child->isFile() && ! $child->isDot() )
-//						{
-//							include $child->getPathname();
-//						}
-//					}
-//				}
+				$package = preg_replace( '/[^a-z0-9]/i', '\\', $item->getFilename() );
+                              
+				$this->_packages[ $package ] = $this->package( $item, true, $package );
+				unset( $package );
 			}
+			
+			unset( $item );
 		}
 
-		unset( $dir, $item );
+		unset( $dir );
 	}
 	
 	/**
-	 * Autload with namespaces
+	 * Autoload with namespaces
+	 *
+	 * This does not comply with PSR-0 since there are multiple classpaths that
+	 * is used within Wave. Instead we look by default in a PSR-0 compliant way
+	 * if the class is found, if not a scan of all packages is done.
+	 * 
+	 * In more practical terms this means a a package name can be substituted
+	 * on runtime. E.g wave-auth is really the wave package. This does only
+	 * work with names concatenated with hyphens (everything after the first
+	 * hyphen will be discarded)
 	 *
 	 * @return true 
 	 * @throws LogicException when file not found
 	 */
 	public static function autoload ( $class )
 	{
+		$package = null;
 		if ( false !== stripos( $class, '\\' ) ) 
-		{   
+		{
+			$package = substr( $class, 0, strpos( '\\', $class ) );
+
 			//  Namespaces are directly found in the path
 			$class = str_replace( '\\', '/', $class );
 		}
 		
-		$appendfile = "{$class}.php";
+		$file = "{$class}.php";
 
-
-		if( ! is_readable( __ROOT__ . $appendfile ) )
+		if( ! is_readable( __ROOT__ . $file ) )
 		{
-			$appendfile = strtolower( $appendfile );
-			
-			if ( !is_readable( __ROOT__ . $appendfile ) ) {
-				throw new LogicException( "Could not find class {$class}, should be located in " . __ROOT__ );
-			}
+			throw new LogicException( "Could not find class {$class}, should be located in " . __ROOT__ );
 		}
 		
-		include __ROOT__ . $appendfile;
+		include __ROOT__ . $file;
 	
 		return true;
 	}
@@ -130,13 +140,14 @@ class Base
 	}
 
 	/**
-	 * Fetch information about a packagqe
+	 * Fetch information about a package
 	 *
-	 * @param SplFileInfo|string $package the SplFileInfo or string represenation
-	 * @param boolean $regenerate force regeneration
-	 * @return array information about the package
+	 * @param SplFileInfo|string $package The SplFileInfo or string represenation of package
+	 * @param boolean $regenerate Flag to force regneration of package information
+	 * @param string $alias Alias to real package 
+	 * @return array Information about the package
 	 */
-	public function package ( $package, $regnerate = false )
+	public function package ( $package, $regnerate = false, $alias = null )
 	{
 		static $skip = array('controller', '.git');
 

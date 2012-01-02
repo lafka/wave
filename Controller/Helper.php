@@ -122,11 +122,11 @@ abstract class Helper
 			//	Return default controller
 			return array( 
 				'controller' => static::DefaultController,
-				'view' => 'default',
+				'view'       => 'default',
 			);
 		}
 
-		$uri = explode( '/', $uri );
+		$uri               = explode( '/', $uri );
 		$uri['controller'] = array_shift( $uri );
 		$uri['view']       = ( count($uri) > 1 ) ? array_shift( $uri ) : 'default';
 
@@ -134,32 +134,43 @@ abstract class Helper
 	}
 		
 	/**
-	 * Load error module
-	 * 
+	 * Load error view
+     *
+     * Tries to look for a view with the given $statusCode in the current
+     * $controller - if given. If the view is not found it will try to load
+     * the view from the error component.
+     *
+     * A HTTP 404 error will be displayed if the view is not to be found any
+     * of the controllers available.
+	 *
 	 * @param integer $statusCode HTTP status code
-	 * @param \Fwt\Controller\Iface $controller The original controller
+	 * @param \Fwt\Controller\Iface|null $controller The original controller
 	 * @return void
 	 */
-	public static function loadError( $statusCode, \Fwt\Controller\Iface $controller )
+	public static function loadError( $statusCode, \Fwt\Controller\Iface $controller = null )
 	{
-		if ( $controller->hasView( $statusCode ) )
+		if ( null !== $controller && $controller->hasView( $statusCode ) )
 		{
 			$controller->loadView( $statusCode );
 		} else {
 			//	Load default error package view
-			$a = array(
+			$default = array(
 				'controller' => 'error',
 				'view'       => $statusCode
 			);
-			
-			$proxy = \Fwt\Controller\Helper::factory( $a, $controller->base );
+
+			$proxy = \Fwt\Controller\Helper::factory( $default, $controller->base );
 			if ( $proxy->hasView( $statusCode ) )
 			{
 				$proxy->loadView( $statusCode );
 			} else {
 				$proxy->loadView( 404 );
 			}
+
+            unset( $proxy, $default );
 		}
+
+        unset( $controller, $statusCode );
 	}
 
 }

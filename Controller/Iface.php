@@ -44,19 +44,20 @@ use  \Fwt\Base;
 
 interface Iface
 {
-	
-	const USE_CURRENT_VIEW = 0;
+    /**
+     * Flag for current view
+     * @var int
+     */
+    const USE_CURRENT_VIEW = 0;
 
-	/**
-	 * Select the right view
-	 *
-	 * Process the URI and load target right view
-	 *
-	 * @param array $uri to dispatch
-	 * @param array $component cached information from base 
-	 * @param Base  $base The base object
-	 * @since 0.1
-	 */
+    /**
+     * Initializes a controller
+     *
+     * @param array $uri The dispatched uri
+     * @param array $component Cached information from base
+     * @param \Fwt\Base $base The core kernel object
+     * @return \Fwt\Controller\Iface
+     */
 	public function __construct ( array $uri, array $component, Base $base );
 
 	/**
