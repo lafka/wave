@@ -61,6 +61,8 @@ try {
 
 	if ( ! $controller->hasView( $parts['view'] ) )
 	{
+		__debug( "Could not find view '{$parts['view']}' in '" . get_class( $controller ) . "'.", '__MAIN__' );
+		__debug( 'available views: ' . implode(', ', $controller->availableViews() ), '__MAIN__' );
 		Helper::loadError( 404, $controller );
 	} else {
 		//	If something wrong happend this means we shouldent load the view
@@ -72,7 +74,7 @@ try {
 	include 'presentation/footer.php';
 
 	// Where done
-	define('_RUNTIME_DONE');
+	define('_RUNTIME_DONE', true );
 } catch ( Exception $e ) {
 	header( "Status: 500" );
 	echo "<div class=\"error\"><pre>

@@ -118,12 +118,11 @@ abstract class Abstraction
 	public function availableViews ()
 	{
 		$views = array();
-
 		$keys = array_keys( $this->_package['components'] );
 
 		for ( $i = 0, $c = count($this->_package['components']); $i < $c; $i++ )
 		{
-			$root      = buildpath( __ROOT__, $this->_package['package'] );
+			$root      = buildpath( __ROOT__, $this->_package['path'] );
 			$wholename = buildpath( $root, $keys[$i], '*' );
 
 			$views     = Filesystem::find( "{$root} -type f  ! -name '.*' -and -name '*.php' -and ! -name 'Controller.php' -iwholename '{$wholename}'" );
@@ -144,7 +143,7 @@ abstract class Abstraction
 	 * Check if a given view exists within a controller
 	 * 
 	 * @param string $view The view to check
-	 * @return string|false The path to corresponding component or false
+	 * @return boolean True if view is found false otherwise
 	 */
 	public function hasView ( $view = Iface::USE_CURRENT_VIEW )
 	{
@@ -153,7 +152,7 @@ abstract class Abstraction
 			$view = $this->currentView();
 		}
 
-		return array_search( $view, $this->_views );
+		return false !== array_search( $view, $this->_views );
 	}
 
 	/**
@@ -176,8 +175,8 @@ abstract class Abstraction
 		{
 			$component = array_cs_search( $this->_request['controller'], $this->_package['components']);
 			
-			include buildpath( __ROOT__,  $this->_package['package'], 
-			                   $component, 
+			include buildpath( __ROOT__,  $this->_package['path'], 
+			                   $this->_package['components'][$component], 
 			                   "{$view}.php" );
 			return;
 		}

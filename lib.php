@@ -28,6 +28,23 @@ function buildpath ( )
 }
 
 /**
+ * Creates the namespace from $input
+ *
+ * Replaces all non-alphanumeric characters with namespace separator.
+ *
+ * @param string $package The input to divide into namespace sequence
+ * @param boolean $array Flag to return as a array or string
+ * @return string|array|false The namespace representation depending on $array or false if failed
+ */
+function parseNamespace ( $input, $array = false )
+{
+	$input = preg_replace( '/[^a-z0-9]/i', '\\', $input );
+
+	return true === $array ? explode( '\\', $input ) : $input;
+
+}
+
+/**
  * Add a debug message
  *
  * @param string $msg The message line to add
@@ -51,7 +68,7 @@ function __debug ( $msg, $label = '' )
  * @param array $haystack Array to search through
  * @return mixed|false The key or false if not found
  */
-function array_cs_search( $needle, array $haystack )
+function array_cs_search ( $needle, array $haystack )
 {
 	$keys = array_keys( $haystack );
 	for ( $i = 0, $c = count($haystack); $i < $c; $i++ )
@@ -65,4 +82,33 @@ function array_cs_search( $needle, array $haystack )
 	unset( $haystack );
 
 	return false;
+}
+
+/**
+ * Compute the difference 2 arrays based on index
+ *
+ * @param array $arr The initial array
+ * @param [ array $arr2 Additional array]
+ * @return array The difference
+ */
+function array_diff_seq ( array $arr )
+{
+	$argv = func_get_args();
+	$argc = func_num_args();
+	$ret  = array();
+
+	for ( $i = 0, $c = count($arr); $i < $c; $i++, $equal = false )
+	{
+		for ( $x = 1; $x < $argc; $x++ )
+		{
+			if ( !isset($argv[$x][$i]) || $argv[$x][$i] !== $arr[$i] )
+			{
+				$ret[$i] = $arr[$i];
+			}
+		}
+	}
+
+	unset( $argc, $argv, $x, $i );
+
+	return $ret;
 }

@@ -61,7 +61,10 @@ abstract class Helper
 
 		if ( array_key_exists( $parts['controller'], $base->uriMatch ) )
 		{
-			$controller = $base->uriMatch[$parts['controller']];
+			$packages         = $base->packages();
+			$controller       = $base->uriMatch[$parts['controller']];
+			$parts['package'] = $packages[$base->findPackageForClass( $controller, array_keys($packages) )];
+			unset( $packages, $packageNs );
 		} else {
 			$targetpackage       = $base->package( 'Fwt' );
 			$controller          = '\\Fwt\\Error\\Controller';

@@ -104,10 +104,41 @@ class Base
 		spl_autoload_register( array( $this, 'autoload' ), true, true );
 		// Set shutdown function
 		register_shutdown_function( array( $this, 'shutdown' ) );
+		// Set error handler
+		set_error_handler( array( $this, 'errorHandler' ) );
 
 		__debug( 'finished bootstrap sequence', __METHOD__ );
 	}
 
+	/**
+	 * Error handler function
+	 *
+	 *
+	 * @param int $errno The error code
+	 * @param string $errstr The error message
+	 * @param string $errfile The file error was triggerd
+	 * @param int $errline The line error was triggered
+	 * @param array $errcontext Active symbol table for scope error was triggered in
+	 * @return void
+	 */
+	public function errorHandler ( $errno, $errstr, $errfile = '', $errline = 0, array $errcontext = array() )
+	{
+		// This error code is not included in error_reporting
+	    if ( ! __DEBUG_ENABLED && !(error_reporting() & $errno) ) {
+	    	__debug( "{$errstr} in file {$errfile}:{$errline}", "error [{$errno}]:" );
+			return;
+		}
+
+		echo "<b>error [{$errno}]:</b> {$errstr} in file {$errfile}:{$errline}<br />\n";
+	}
+
+	/**
+	 * Shutdown handler
+	 *
+	 * Called at the end of each script
+	 * 
+	 * @return void
+	 */
 	public function shutdown ()
 	{
 		unset( $this );
@@ -135,7 +166,7 @@ class Base
 				continue;
 			}
 
-			$package = preg_replace( '/[^a-z0-9]/i', '\\', $item->getFilename() );
+			$package = parseNamespace( $item->getFilename() );
 			$this->_packages[ $package ] = $this->package( $item, true, $package );
 
 			unset( $package, $item );
@@ -175,8 +206,12 @@ class Base
 		if ( null !== $package )
 		{
 			$pathlist = explode( '\\', $class );
-			
-			$file = call_user_func_array( 'buildpath', array_replace( array( $package ), $pathlist ) ) . '.php';
+			$path     = array_diff_seq($pathlist, parseNamespace($package, true) );
+	
+			array_unshift( $path, $package );
+
+			$file = call_user_func_array('buildpath', $path) . '.php';
+			unset( $pathlist, $path );
 		} else {
 			$file = str_replace( '\\', '/', $class) . '.php';
 		}
@@ -222,6 +257,7 @@ class Base
 		}
 
 		$depth = substr_count( $needle, '\\' );
+
 
 		// Filter out all packages that does not start with $needle or that
 		// have a more specific namespace.
@@ -277,12 +313,10 @@ class Base
 			$key   = str_replace( $info['path'], '', $raw[$i] );
 			$key   = trim( strtolower( $key ), '/' );
 			$key   = preg_replace( '#/[^/]+$#', '', $key );
-			$value = str_replace( $info['path'], $info['package'], $raw[$i] );
-			$value = str_replace( '/', '\\', $value );
-			$value = str_replace( '.php', '', $value );
+			$value = str_replace( '.php', '', $raw[$i] );
 
-			$this->uriMatch[$key]     = $value;
-			$info['components'][$key] = $value;
+			$info['components'][$key] = preg_replace( "#{$info['path']}(.*)/Controller.php$#", '$1', $raw[$i] );
+			$this->uriMatch[$key]     = str_replace( '/', '\\', $info['package'] . $info['components'][$key] ) . '\\Controller';			
 		}
 
 		unset( $key, $value, $raw );
