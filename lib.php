@@ -26,3 +26,43 @@ function buildpath ( )
 {
 	return implode( DIRECTORY_SEPARATOR, func_get_args() );
 }
+
+/**
+ * Add a debug message
+ *
+ * @param string $msg The message line to add
+ * @param string [ $label Add a label to the message ]
+ * @return void
+ */
+function __debug ( $msg, $label = '' )
+{
+	if ( ! defined( '__DEBUG_ENABLED' ) )
+	{
+		return;
+	}
+
+	\Fwt\Debug::add( $msg, $label );
+}
+
+/**
+ * Finds the key based on case-insensetiv search
+ *
+ * @param string|int $needle The needle to search for
+ * @param array $haystack Array to search through
+ * @return mixed|false The key or false if not found
+ */
+function array_cs_search( $needle, array $haystack )
+{
+	$keys = array_keys( $haystack );
+	for ( $i = 0, $c = count($haystack); $i < $c; $i++ )
+	{
+		if ( 0 === strcasecmp($needle, $keys[$i]) )
+		{
+			return $needle;
+		}
+	}
+
+	unset( $haystack );
+
+	return false;
+}

@@ -45,13 +45,13 @@ define( '__DS__',          DIRECTORY_SEPARATOR );
 define( '__ROOT__',        __DIR__ . __DS__ );
 define( '__DEBUG_ENABLED', true );
 
-include __ROOT__ . 'fwt/Base.php';
+include __ROOT__ . 'Fwt/Base.php';
 
+global $_debug_array;
 
 try {
-	$base = new Base();
-
-	$parts	  = Helper::process( $_SERVER['REQUEST_URI'] );
+	$base       = new Base();
+	$parts	    = Helper::process( $_SERVER['REQUEST_URI'] );
 	$controller = Helper::factory( $parts, $base );
 
 	include 'presentation/header.php';
@@ -69,9 +69,9 @@ try {
 	include 'presentation/footer.php';
 } catch ( Exception $e ) {
 	header( "Status: 500" );
-	echo "<pre>
+	echo "<div class=\"error\"><pre>
 	{$e->getMessage()}<hr />
 	in {$e->getFile()} on line {$e->getLine()}
-	</pre><hr /><pre>{$e->getTraceAsString()}</pre>";
+	</pre><hr /><pre>{$e->getTraceAsString()}</pre></div>";
 }
 

@@ -39,7 +39,8 @@
  */
 
 namespace Fwt;
-use DirectoryIterator, LogicException, RuntimeException, SplFileInfo;
+use RecursiveDirectoryIterator, LogicException, RuntimeException, SplFileInfo,
+	DirectoryIterator;	
 
 class Base
 {
@@ -58,37 +59,52 @@ class Base
 	 *
 	 * @var array
 	 */
-	protected $_packages = array();
+	protected static $_packages = array();
+
+	/**
+	 * A list of URI's with dedicated controllers.
+	 *
+	 * key matches the URI prefix, and value is a reference to package 
+	 * 
+	 * @var array
+	 */
+	protected static $_uriMatch = array();
 
 	/**
 	 * List up all packages available
 	 *
-	 * Loops through all packages and find things to autoload
+	 * Loops through all packages and find things to autoload, replace any
+	 * non-alphanumeric character with namespace seperator. This might change
+	 * in the future to only be 1 character. 
 	 *
 	 * @return void
 	 */
 	public function __construct ()
 	{
 		require 'lib.php';
+		require 'Utils/Debug.php';
+
+		__debug( 'initiated base class (' . __CLASS__ . ').', __METHOD__ );
+
 		//	Prioritize our autoloader
 		spl_autoload_register( array( __CLASS__, 'autoload' ), true, true );
 
-		$dir = new DirectoryIterator( __ROOT__ ); 
+		$dir    = new DirectoryIterator( __ROOT__ ); 
 
 		foreach ( $dir as $item )
 		{
-			if ( $item->isDir() && 0 !== strpos( $item->getFilename(), '.' ) )
+			if ( ! $item->isDir() || preg_match( "#^\.|^libphutil|^presentation|/nbproject#", $item->getFilename() ) )
 			{
-				$package = preg_replace( '/[^a-z0-9]/i', '\\', $item->getFilename() );
-                              
-				$this->_packages[ $package ] = $this->package( $item, true, $package );
-				unset( $package );
+				continue;
 			}
-			
-			unset( $item );
+
+			$package = preg_replace( '/[^a-z0-9]/i', '\\', $item->getFilename() );
+			static::$_packages[ $package ] = $this->package( $item, true, $package );
+
+			unset( $package, $item );
 		}
 
-		unset( $dir );
+		unset( $iter, $dir );
 	}
 	
 	/**
@@ -103,30 +119,42 @@ class Base
 	 * work with names concatenated with hyphens (everything after the first
 	 * hyphen will be discarded)
 	 *
-	 * @return true 
-	 * @throws LogicException when file not found
+	 * $param string $class The classname to load
+	 * @return bool Status of autoload
 	 */
-	public static function autoload ( $class )
+	public static function autoload ( $class, array $packages = null )
 	{
 		$package = null;
 		if ( false !== stripos( $class, '\\' ) ) 
 		{
-			$package = substr( $class, 0, strpos( '\\', $class ) );
+			if ( ! ($package = static::findPackageForClass( $class, array_keys( static::$_packages ) ) ) )
+			{
+				__debug( "could not find package for class {$class}", __METHOD__ );
+			} else {
+				$package = static::$_packages[$package]['path'];
+			}
 
-			//  Namespaces are directly found in the path
-			$class = str_replace( '\\', '/', $class );
 		}
-		
-		$file = "{$class}.php";
 
-		if( ! is_readable( __ROOT__ . $file ) )
+		if ( null !== $package )
 		{
-			throw new LogicException( "Could not find class {$class}, should be located in " . __ROOT__ );
+			$pathlist = explode( '\\', $class );
+			$file = call_user_func_array( 'buildpath', array_replace( $pathlist, array( $package ) ) ) . '.php';
+		} else {
+			$file = str_replace( '\\', '/', $class) . '.php';
 		}
-		
-		include __ROOT__ . $file;
-	
-		return true;
+
+
+		if( is_readable( __ROOT__ . $file ) )
+		{
+			
+			__debug( "loaded class '{$class}' from file '{$file}'", __METHOD__ );
+			include __ROOT__ . $file;
+			return true;
+		}
+
+		__debug( "could not autoload class {$class} (tried: {$file}", __METHOD__ );
+		return false;
 	}
 
 	/**
@@ -136,127 +164,91 @@ class Base
 	 */
 	public function packages ()
 	{
-		return $this->_packages;
+		return static::$_packages;
+	}
+
+	/**
+	 * Find the package where class belongs
+	 *
+	 * Searches through $haystack after $needle
+	 *
+	 * @param string $needle The classname to find package for
+	 * @param array  $haystack Array with available package names as value
+	 * @return string|null The package name or false if not found
+	 */
+	public static function findPackageForClass( $needle, array $haystack )
+	{
+		$targetNs = substr_replace( $needle,  '', strrpos( $needle, '\\' ) );
+
+		if ( isset($haystack[$targetNs]) )
+		{
+			return static::$_packages[$targetNs]['package'];
+		}
+
+		$depth = substr_count( $needle, '\\' );
+
+		// Filter out all packages that does not start with $needle or that
+		// have a more specific namespace.
+		$haystack = array_filter( $haystack, function ($v) use ($needle, $depth) {
+			$occur = substr_count( $v, '\\' ); 
+			
+			return ( 0 === strpos( $needle, $v ) && 
+			         $occur <= $depth ); 
+		} );
+
+		unset( $chars, $depth, $targetNs, $needle );
+
+		usort( $haystack, function ( $a, $b ) { return strlen($b) - strlen($a); } );
+
+		return array_key_exists( 0, $haystack ) ? $haystack[0] : null;
 	}
 
 	/**
 	 * Fetch information about a package
 	 *
 	 * @param SplFileInfo|string $package The SplFileInfo or string represenation of package
-	 * @param boolean $regenerate Flag to force regneration of package information
+	 * @param boolean $regenerate Flag to force regneration of package information <unused>
 	 * @param string $alias Alias to real package 
 	 * @return array Information about the package
 	 */
 	public function package ( $package, $regnerate = false, $alias = null )
 	{
-		static $skip = array('controller', '.git');
-
+		$alias = null === $alias ? $package : $alias;
 		$info = array(
-			'package' => (string) $package,
+			'package'    => $alias,
+			'path'       => $package instanceof SplFileInfo ? $package->getFilename() : $package,
+			'components' => array(),
 		);
 
-		//	Check that the package is found by previous directory iteration
-		if ( array_key_exists( $info['package'], $this->packages() ) && false === $this->_packages[$info['package']] )
+		unset( $alias );
+
+		__debug( "parsing package '{$info['package']}' from path '{$info['path']}'", __METHOD__ );
+	
+		if ( ! $package instanceof SplFileInfo && ! is_dir( __ROOT__ . $package) )
 		{
-			throw new RuntimeException( __METHOD__ . " there is not such package: {$info['package']}....." );
-			return false;
+			throw new RuntimeException( __METHOD__ . " could not find package '{$info['package']}' in path '{$path}'" ); 
 		}
 
-		if ( true !== $regnerate && array_key_exists( $info['package'], $this->packages() ) )
+		unset( $package );
+
+		$raw = Utils\Filesystem::find( " {$info['path']} -type f -name 'Controller.php' ! -wholename '*/.*'" );
+
+		$components = array();
+
+		for ( $i = 0, $c = count($raw); $i < $c; $i++ )
 		{
-				return $this->_packages[ $info['package'] ];
+			// Fix namespaces and paths
+			$key   = str_replace( $info['path'], '', $raw[$i] );
+			$key   = trim( strtolower( $key ), '/' );
+			$key   = preg_replace( '#/[^/]+$#', '', $key );
+			$value = str_replace( $info['path'], $info['package'], $raw[$i] );
+
+			static::$_uriMatch[$key]               = $value;
+			$info['components'][$key] = str_replace( '/', '\\', $value );
 		}
 
-		//	Get path to reinstance iterator so we don't need to make 
-		$path = ($package instanceof DirectoryIterator) ? $package->getPathname() : __ROOT__ . $package;
-
-		if ( ! is_dir( $path ) )
-		{
-			throw new RuntimeException( __METHOD__ . " could not find package {$info['package']} in path " . __ROOT__ );
-		}
-
-		$package = new DirectoryIterator( $path );
-
-		unset( $path );
-		
-		foreach ( $package as $item )
-		{
-			if ( $item->isDir() && ! $item->isDot() && ! in_array( (string) $item, $skip ) )
-			{
-				$info['components'][(string) $item->current()] = $this->component( $info['package'], $item->getFilename(), true );
-			}
-		}
-
-		unset( $package, $item );
+		unset( $key, $value, $raw );
 
 		return $info;
-	}
-
-	/**
-	 * Find information about a component
-	 *	
-	 * @param string $package the package to look within
-	 * @param DirectoryIterator|string the component to scan
-	 * @param boolean $regenerate don't use cached info
-	 * @param boolean $lookuppackage if package don't exists, try to find it
-	 * @return array component info
-	 */
-	public function component ( $package, $component, $regenerate = false, $lookuppackage = false )
-	{
-		static $setKey  = array('controller');
-
-		$info = array(
-			'package'	=> (string) $package,
-			'component'  => (string) $component,
-			'controller' => false,
-			'views'		 => array(),
-		);
-		
-		if ( !array_key_exists( $package, $this->packages() ) )
-		{
-			if ( true === $lookuppackage )
-			{
-				//	Regnerate recursivly
-				$this->package( $package, true );
-			}
-		}
-		
-		if ( ! $component instanceof DirectoryIterator )
-		{
-			if ( ! is_dir( __ROOT__ . $info['package'] . __DS__ . $info['component'] ) )
-			{
-				throw new RuntimeException( __METHOD__ . " could not find component {$info['package']}.{$info['component']}");
-			}
-
-			$component = new DirectoryIterator( __ROOT__ . $info['package'] . __DS__ . $info['component'] );
-		}
-		
-		foreach ( $component as $item )
-		{
-//			var_dump( $item->getPathname() );
-			if ( $item->isDir() || $item->isDot() )
-			{
-				continue;
-			} elseif ( in_array( $item->getBasename('.php'), $setKey ) ) {
-				$info[ $item->getBasename('.php') ] = true;
-			} elseif ( '.php' === substr($item->getBasename(), -4) ) {
-				$info[ 'views' ][ substr( $item->getBasename(), 0, -4) ] = true;
-			}
-		}
-
-		unset ( $component, $package );
-
-		return $info;
-	}
-
-	/**
-	 * Finds the componenets
-	 *
-	 * @param array $packages the selected packages to search
-	 * @return array registered components
-	 */
-	public function components ( array $packages = null )
-	{
-
 	}
 }

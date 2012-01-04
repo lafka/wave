@@ -40,7 +40,7 @@
 
 namespace Fwt\Controller\Simple;
 
-use UnexpectedValueException, \Fwt\Base, \Fwt\Controller\Iface;
+use UnexpectedValueException, \Fwt\Base, \Fwt\Controller\Iface, \Fwt\Utils\Filesystem;
 
 abstract class Abstraction 
 {
@@ -56,12 +56,7 @@ abstract class Abstraction
 	 */
 	protected $_view;
 
-	/**
-	 * Information about component
-	 *
-	 * @var array
-	 */
-	protected $_component;
+	protected $_views;
 
 	/**
 	 * Processed request
@@ -86,14 +81,14 @@ abstract class Abstraction
 	 * @param Base  $base The base object
 	 * @return void
 	 */
-	public function __construct ( array $parts, array $comp, Base $base  )
+	public function __construct ( array $parts, Base $base  )
 	{
-		$this->_package		= $comp['package'];
-		$this->_view		= $parts['view'];
-		$this->_component	= $comp;
+		$this->_package		= $parts['package'];
+		$this->_view		= (array_key_exists( 'view', $parts ) ) ? $parts['view'] : null;
 		$this->_request     = $parts;
 		$this->base         = $base;
-				
+		$this->_views       = $this->availableViews();
+
 		unset ( $comp, $parts, $base );
 	}
 
@@ -114,10 +109,42 @@ abstract class Abstraction
 	}
 
 	/**
+	 * Find all available views
+	 *
+	 * Searches through the controller directory and find all loadable view
+	 * 
+	 * @return array Set of view for this controller
+	 */
+	public function availableViews ()
+	{
+		$views = array();
+
+		$keys = array_keys( $this->_package['components'] );
+
+		for ( $i = 0, $c = count($this->_package['components']); $i < $c; $i++ )
+		{
+			$root      = buildpath( __ROOT__, $this->_package['package'] );
+			$wholename = buildpath( $root, $keys[$i], '*' );
+
+			$views     = Filesystem::find( "{$root} -type f  ! -name '.*' -and -name '*.php' -and ! -name 'Controller.php' -iwholename '{$wholename}'" );
+
+			$length    = strlen( $wholename ) - 1;
+
+			for ( $x = 0, $y = count($views); $x < $y; $x++ )
+			{
+				//	Cut the package, component, and suffix from the name
+				$views[$x] = substr( $views[$x], $length, -4 );
+			}
+		}
+
+		return $views;
+	}
+
+	/**
 	 * Check if a given view exists within a controller
 	 * 
 	 * @param string $view The view to check
-	 * @return boolean True if view is available
+	 * @return string|false The path to corresponding component or false
 	 */
 	public function hasView ( $view = Iface::USE_CURRENT_VIEW )
 	{
@@ -126,12 +153,7 @@ abstract class Abstraction
 			$view = $this->currentView();
 		}
 
-		if ( ! array_key_exists( $view, $this->_component['views'] ) )
-		{
-			return false;
-		}
-
-		return true;
+		return array_search( $view, $this->_views );
 	}
 
 	/**
@@ -149,15 +171,19 @@ abstract class Abstraction
 		{
 			$view = $this->currentView();
 		} 
-		
-		if ($this->hasView( $view ) )
+
+		if ( false !== ($key =$this->hasView( $view ) ) )
 		{
-			include buildpath( __ROOT__,  $this->_package, $this->_component['component'], "{$view}.php" );
+			$component = array_cs_search( $this->_request['controller'], $this->_package['components']);
+			
+			include buildpath( __ROOT__,  $this->_package['package'], 
+			                   $component, 
+			                   "{$view}.php" );
 			return;
 		}
 
-		throw new UnexpectedValueException( __METHOD__ . " could not load view {$view}, it was not found in the " .
-		                                    "{$this->_package}.{$this->_component['component']} package" );
+		throw new UnexpectedValueException( __METHOD__ . " could not load view {$view}, it was not found in " .
+		                                    "'{$this->_package['package']}' package" );
 	}
 	
 	/**
@@ -168,6 +194,16 @@ abstract class Abstraction
 	public function init ()
 	{
 		return true;
+	}
+
+	/**
+	 * Remove object properties
+	 *
+	 * @return void
+	 */
+	public function __destruct ()
+	{
+		unset( $this->base );
 	}
 }
 

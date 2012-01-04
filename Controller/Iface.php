@@ -54,11 +54,10 @@ interface Iface
      * Initializes a controller
      *
      * @param array $uri The dispatched uri
-     * @param array $component Cached information from base
      * @param \Fwt\Base $base The core kernel object
      * @return \Fwt\Controller\Iface
      */
-	public function __construct ( array $uri, array $component, Base $base );
+	public function __construct ( array $uri, Base $base );
 
 	/**
 	 * Get the current view

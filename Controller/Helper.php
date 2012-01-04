@@ -22,7 +22,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS
- * AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+: * AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
@@ -59,39 +59,18 @@ abstract class Helper
 		$targetpackage = false;
 		$controller    = false;
 
-		foreach ( $base->packages() as $package )
+		if ( !is_array($targetpackage) )
 		{
-			//	Don't continue if it's just a package
-			if ( ! array_key_exists( 'components', $package ) )
-			{
-				continue;
-			}
-			if ( ! array_key_exists( $parts['controller'], $package['components'] ) )
-			{
-				continue;
-			} elseif ( true !== $package['components'][$parts['controller']]['controller'] ) {
-				continue;
-			} else {
-				$targetpackage = $package;
-				$controller = ucfirst($package['package']) . '\\' . ucfirst($parts['controller']) . '\\Controller';
-				break;
-			}
-		}
-
-		if ( false === $targetpackage )
-		{
-			/**
-			 * @todo turn into error if it does not work
-			 */
-			$targetpackage       = $base->package( 'fwt' );
+			$targetpackage       = $base->package( 'Fwt' );
 			$controller          = '\\Fwt\\Error\\Controller';
-			$parts['controller'] = 'error';
+			$parts['controller'] = 'Error';
 			$parts['view']       = '404';
+			$parts['package']    = $targetpackage;
 		}
 
 		if ( class_exists( $controller ) )
 		{
-			$controller = new $controller( $parts, $targetpackage['components'][$parts['controller']], $base );
+			$controller = new $controller( $parts, $base );
 			return $controller;
 		}
 
