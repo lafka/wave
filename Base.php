@@ -175,7 +175,8 @@ class Base
 		if ( null !== $package )
 		{
 			$pathlist = explode( '\\', $class );
-			$file = call_user_func_array( 'buildpath', array_replace( $pathlist, array( $package ) ) ) . '.php';
+			
+			$file = call_user_func_array( 'buildpath', array_replace( array( $package ), $pathlist ) ) . '.php';
 		} else {
 			$file = str_replace( '\\', '/', $class) . '.php';
 		}
@@ -277,9 +278,11 @@ class Base
 			$key   = trim( strtolower( $key ), '/' );
 			$key   = preg_replace( '#/[^/]+$#', '', $key );
 			$value = str_replace( $info['path'], $info['package'], $raw[$i] );
+			$value = str_replace( '/', '\\', $value );
+			$value = str_replace( '.php', '', $value );
 
-			static::$_uriMatch[$key]               = $value;
-			$info['components'][$key] = str_replace( '/', '\\', $value );
+			$this->uriMatch[$key]     = $value;
+			$info['components'][$key] = $value;
 		}
 
 		unset( $key, $value, $raw );
