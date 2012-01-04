@@ -41,7 +41,7 @@ function __debug ( $msg, $label = '' )
 		return;
 	}
 
-	\Fwt\Debug::add( $msg, $label );
+	\Fwt\Utils\Debug::add( $msg, $label );
 }
 
 /**

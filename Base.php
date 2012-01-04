@@ -59,16 +59,16 @@ class Base
 	 *
 	 * @var array
 	 */
-	protected static $_packages = array();
+	protected $_packages = array();
 
 	/**
 	 * A list of URI's with dedicated controllers.
 	 *
-	 * key matches the URI prefix, and value is a reference to package 
+	 * key matches the URI prefix, and value is a referene to package 
 	 * 
 	 * @var array
 	 */
-	protected static $_uriMatch = array();
+	public $uriMatch = array();
 
 	/**
 	 * List up all packages available
@@ -85,28 +85,65 @@ class Base
 		require 'Utils/Debug.php';
 
 		__debug( 'initiated base class (' . __CLASS__ . ').', __METHOD__ );
-
+	}
+	
+	/**
+	 * Initialize system
+	 *
+	 * Registers various functions with system:
+	 *   - fatal error handler
+	 *   - shutdown function
+	 *   - autoload functions
+	 *
+	 * @return void
+	 */
+	public function init ()
+	{
+		__debug( 'initializing bootstrap sequence', __METHOD__ );
 		//	Prioritize our autoloader
-		spl_autoload_register( array( __CLASS__, 'autoload' ), true, true );
+		spl_autoload_register( array( $this, 'autoload' ), true, true );
+		// Set shutdown function
+		register_shutdown_function( array( $this, 'shutdown' ) );
 
+		__debug( 'finished bootstrap sequence', __METHOD__ );
+	}
+
+	public function shutdown ()
+	{
+		unset( $this );
+	}
+
+	/**
+	 * Scan for packages
+	 *
+	 * Adds all basefolder (with exceptions*) as packages and scans them for
+	 * components.
+	 *
+	 * * libphutil and presentation is not scanned. Will change
+	 *
+	 * @return void
+	 */
+	public function parsePackages ()
+	{
+		// Find and parse packages
 		$dir    = new DirectoryIterator( __ROOT__ ); 
 
 		foreach ( $dir as $item )
 		{
-			if ( ! $item->isDir() || preg_match( "#^\.|^libphutil|^presentation|/nbproject#", $item->getFilename() ) )
+			if ( ! $item->isDir() || preg_match( "#^\.|^libphutil|^presentation#", $item->getFilename() ) )
 			{
 				continue;
 			}
 
 			$package = preg_replace( '/[^a-z0-9]/i', '\\', $item->getFilename() );
-			static::$_packages[ $package ] = $this->package( $item, true, $package );
+			$this->_packages[ $package ] = $this->package( $item, true, $package );
 
 			unset( $package, $item );
 		}
 
 		unset( $iter, $dir );
 	}
-	
+
 	/**
 	 * Autoload with namespaces
 	 *
@@ -122,18 +159,17 @@ class Base
 	 * $param string $class The classname to load
 	 * @return bool Status of autoload
 	 */
-	public static function autoload ( $class, array $packages = null )
+	public function autoload ( $class, array $packages = null )
 	{
 		$package = null;
 		if ( false !== stripos( $class, '\\' ) ) 
 		{
-			if ( ! ($package = static::findPackageForClass( $class, array_keys( static::$_packages ) ) ) )
+			if ( ! ($package = $this->findPackageForClass( $class, array_keys( $this->_packages ) ) ) )
 			{
 				__debug( "could not find package for class {$class}", __METHOD__ );
 			} else {
-				$package = static::$_packages[$package]['path'];
+				$package = $this->_packages[$package]['path'];
 			}
-
 		}
 
 		if ( null !== $package )
@@ -143,7 +179,6 @@ class Base
 		} else {
 			$file = str_replace( '\\', '/', $class) . '.php';
 		}
-
 
 		if( is_readable( __ROOT__ . $file ) )
 		{
@@ -164,7 +199,7 @@ class Base
 	 */
 	public function packages ()
 	{
-		return static::$_packages;
+		return $this->_packages;
 	}
 
 	/**
@@ -176,13 +211,13 @@ class Base
 	 * @param array  $haystack Array with available package names as value
 	 * @return string|null The package name or false if not found
 	 */
-	public static function findPackageForClass( $needle, array $haystack )
+	public function findPackageForClass( $needle, array $haystack )
 	{
 		$targetNs = substr_replace( $needle,  '', strrpos( $needle, '\\' ) );
 
 		if ( isset($haystack[$targetNs]) )
 		{
-			return static::$_packages[$targetNs]['package'];
+			return $this->_packages[$targetNs]['package'];
 		}
 
 		$depth = substr_count( $needle, '\\' );
@@ -250,5 +285,15 @@ class Base
 		unset( $key, $value, $raw );
 
 		return $info;
+	}
+
+	public function __destruct ()
+	{
+		if ( __DEBUG_ENABLED && !defined('__RUNTIME_DONE') )
+		{
+			echo "<ul>\n";
+			\Fwt\Utils\Debug::output( '<li class="debug-line">%s</li>' );
+			echo "</ul>\n";
+		}
 	}
 }

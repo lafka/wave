@@ -51,6 +51,9 @@ global $_debug_array;
 
 try {
 	$base       = new Base();
+	$base->init();
+	$base->parsePackages();
+
 	$parts	    = Helper::process( $_SERVER['REQUEST_URI'] );
 	$controller = Helper::factory( $parts, $base );
 
@@ -67,6 +70,9 @@ try {
 	}
 
 	include 'presentation/footer.php';
+
+	// Where done
+	define('_RUNTIME_DONE');
 } catch ( Exception $e ) {
 	header( "Status: 500" );
 	echo "<div class=\"error\"><pre>

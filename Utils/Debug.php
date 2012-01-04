@@ -1,6 +1,6 @@
 <?php
 
-namespace Fwt;
+namespace Fwt\Utils;
 
 class Debug
 {
@@ -11,9 +11,9 @@ class Debug
 		static::$messages[] = ( !empty($label) ? "<b>{$label}: </b>" : '' ) . $message;
 	}
 
-	public static function output ( $format = '%s' )
+	public static function output ( $format = "%s\n")
 	{
-		foreach ( $messages as $msg )
+		foreach ( static::$messages as $msg )
 		{
 			printf( $format, $msg );
 		}
