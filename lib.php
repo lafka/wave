@@ -112,3 +112,28 @@ function array_diff_seq ( array $arr )
 
 	return $ret;
 }
+
+/**
+ * Merge arrays with matching keys
+ *
+ * @param array $arr The initial array
+ * @param [ array $arr2 Additional array]
+ * @param [ array ... ]
+ * @return array
+ */
+function array_merge_distinct( array $arr )
+{
+	$argv = func_get_args();
+
+	array_walk( $argv, function ($array) use (&$arr) {
+		$keys = array_keys( $array );
+
+		for ( $i = 0, $c = count($keys); $i < $c; $i++ )
+			if ( array_key_exists( $keys[$i], $arr ) )
+				$arr[$keys[$i]] = $array[$keys[$i]];
+	});
+
+	unset( $argv );
+
+	return $arr;
+}
