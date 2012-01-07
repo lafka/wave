@@ -75,7 +75,7 @@ function array_cs_search ( $needle, array $haystack )
 	{
 		if ( 0 === strcasecmp($needle, $keys[$i]) )
 		{
-			return $needle;
+			return $keys[$i];
 		}
 	}
 

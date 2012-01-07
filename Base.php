@@ -84,7 +84,7 @@ class Base
 		require 'lib.php';
 		require 'Utils/Debug.php';
 
-		__debug( 'initiated base class (' . __CLASS__ . ').', __METHOD__ );
+		__debug( 'initiated base class (' . __CLASS__ . ').', 'main' );
 	}
 	
 	/**
@@ -99,15 +99,16 @@ class Base
 	 */
 	public function init ()
 	{
-		__debug( 'initializing bootstrap sequence', __METHOD__ );
+		__debug( 'initializing bootstrap sequence', 'main-init' );
 		//	Prioritize our autoloader
 		spl_autoload_register( array( $this, 'autoload' ), true, true );
 		// Set shutdown function
 		register_shutdown_function( array( $this, 'shutdown' ) );
 		// Set error handler
 		set_error_handler( array( $this, 'errorHandler' ) );
+		set_exception_handler( array( $this, 'exceptionHandler' ) );
 
-		__debug( 'finished bootstrap sequence', __METHOD__ );
+		__debug( 'finished bootstrap sequence', 'main-init' );
 	}
 
 	/**
@@ -129,18 +130,52 @@ class Base
 			return;
 		}
 
-		echo "<b>error [{$errno}]:</b> {$errstr} in file {$errfile}:{$errline}<br />\n";
+		__debug( "{$errstr} in file {$errfile}:{$errline}", "error [{$errno}]" );
 	}
 
+	public function exceptionHandler ( Exception $e )
+	{
+		header( "Status: 500" );
+		echo "<!DOCTYPE html>\r\n";
+		echo "<html>\r\n";
+		echo "<head><title>A serriouse error occured</title></head>\r\n";
+		echo "<body>\r\n";
+		echo "<div style=\"margin: 2em auto; width: 768px; border-bottom: 1px solid #eee;\">\r\n";
+		echo "<h1>An error occured</h1>\r\n";
+		echo "<p>\r\n";
+		echo $e->getMessage();
+		echo "</p>\r\n";
+		if ( __DEBUG_ENABLED )
+		{
+			echo "<hr />\r\n";
+			echo "<p>\r\n";
+			echo "in file {$e->getFile()} on {$e->getLine()}";
+			echo "</p>\r\n";
+			echo "<pre>\r\n";
+			echo $e->getTraceAsString();
+			echo "</pre>\r\n";
+		}
+		echo "</div>\r\n";
+		echo "</body>\r\n";
+		echo "</html>\r\n";
+	}
+	
 	/**
-	 * Shutdown handler
-	 *
 	 * Called at the end of each script
 	 * 
 	 * @return void
 	 */
 	public function shutdown ()
 	{
+		if ( __DEBUG_ENABLED && null === constant('__RUNTIME_DONE') )
+		{
+			echo "<ul>\r\n";
+				\Fwt\Utils\Debug::output( '<li class="debug-line">%s</li>' );
+			echo "</ul>\r\n";
+
+			\Fwt\Utils\Debug::globals();
+		}
+
 		unset( $this );
 	}
 
@@ -187,8 +222,9 @@ class Base
 	 * work with names concatenated with hyphens (everything after the first
 	 * hyphen will be discarded)
 	 *
-	 * $param string $class The classname to load
+	 * @param string $class The classname to load
 	 * @return bool Status of autoload
+	 * @todo lafa; Add option to act as exclusive autoloader and catch non-existing classes gracefully
 	 */
 	public function autoload ( $class, array $packages = null )
 	{
@@ -197,7 +233,7 @@ class Base
 		{
 			if ( ! ($package = $this->findPackageForClass( $class, array_keys( $this->_packages ) ) ) )
 			{
-				__debug( "could not find package for class {$class}", __METHOD__ );
+				__debug( "could not find package for class {$class}", 'autoload' );
 			} else {
 				$package = $this->_packages[$package]['path'];
 			}
@@ -219,12 +255,12 @@ class Base
 		if( is_readable( __ROOT__ . $file ) )
 		{
 			
-			__debug( "loaded class '{$class}' from file '{$file}'", __METHOD__ );
+			__debug( "loaded class '{$class}' from file '{$file}'", 'autoload' );
 			include __ROOT__ . $file;
 			return true;
 		}
 
-		__debug( "could not autoload class {$class} (tried: {$file}", __METHOD__ );
+		__debug( "could not autoload class {$class} (tried: ".__ROOT__."{$file})", 'autoload');
 		return false;
 	}
 
@@ -294,7 +330,7 @@ class Base
 
 		unset( $alias );
 
-		__debug( "parsing package '{$info['package']}' from path '{$info['path']}'", __METHOD__ );
+		__debug( "parsing package '{$info['package']}' from path '{$info['path']}'", 'package' );
 	
 		if ( ! $package instanceof SplFileInfo && ! is_dir( __ROOT__ . $package) )
 		{
@@ -326,11 +362,13 @@ class Base
 
 	public function __destruct ()
 	{
-		if ( __DEBUG_ENABLED && !defined('__RUNTIME_DONE') )
+		if ( __DEBUG_ENABLED && null !== constant('__RUNTIME_DONE') )
 		{
 			echo "<ul>\n";
 			\Fwt\Utils\Debug::output( '<li class="debug-line">%s</li>' );
 			echo "</ul>\n";
+
+			\Fwt\Utils\Debug::globals();
 		}
 	}
 }

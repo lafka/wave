@@ -50,15 +50,19 @@ include __ROOT__ . 'Fwt/Base.php';
 global $_debug_array;
 
 try {
-	$base       = new Base();
+	$base = new Base();
 	$base->init();
 	$base->parsePackages();
 
+	ob_start();
+	//session_name( 'wave.key' );
+	session_start();
+	
 	$parts	    = Helper::process( $_SERVER['REQUEST_URI'] );
 	$controller = Helper::factory( $parts, $base );
 
-	include 'presentation/header.php';
 
+	
 	if ( ! $controller->hasView( $parts['view'] ) )
 	{
 		__debug( "Could not find view '{$parts['view']}' in '" . get_class( $controller ) . "'.", '__MAIN__' );
@@ -71,11 +75,16 @@ try {
 		$controller->loadView( $parts['view'] );
 	}
 
+	$content = ob_get_clean();
+
+	include 'presentation/header.php';
+	echo $content;
 	include 'presentation/footer.php';
 
 	// Where done
-	define('_RUNTIME_DONE', true );
-} catch ( Exception $e ) {
+	define('__RUNTIME_DONE', true );
+} catch ( LogicException $e ) {
+	// This means code breakage
 	header( "Status: 500" );
 	echo "<div class=\"error\"><pre>
 	{$e->getMessage()}<hr />

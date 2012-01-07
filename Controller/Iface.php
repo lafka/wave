@@ -67,6 +67,13 @@ interface Iface
 	public function currentView ();
 
 	/**
+	 * Get all available views
+	 *
+	 * @return array List of available views
+	 */
+	public function availableViews ();
+
+	/**
 	 * Load the view
 	 *
 	 * @param string $view the view to load

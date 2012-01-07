@@ -51,22 +51,37 @@ abstract class Abstraction extends Simple\Abstraction
 	 * @var string
 	 */
 	const SUBFOLDER = "views";
+
 	/**
-	 * Check if a given view exists within a controller
-	 * 
-	 * @param string $view The view to check
-	 * @return boolean True if view is available
+	 * Fetches all available views
+	 *
+	 * @return array All available view in {@link self::SUBFOLDER}
 	 */
-	public function hasView ( $view = Iface::USE_CURRENT_VIEW )
+	public function availableViews ()
 	{
-		if ( $view === Iface::USE_CURRENT_VIEW )
+		$path = buildpath( __ROOT__, $this->_package['path'], 
+		                   $this->_package['components'][$this->_request['controller']],
+		                   static::SUBFOLDER );
+
+		$dir = dir( $path );
+
+		$views = array();
+
+		while( false !== ($file = $dir->read()) )
 		{
-			$view = $this->currentView();
+			if ( '.' === substr( $file, 0, 1 ) || '.php' !== substr( $file, -4 ) )
+			{
+				continue;
+			}
+
+			$views[] = substr( $file, 0, -4 );
 		}
 
-		return is_readable( buildpath( __ROOT__, $this->_component['package'], 
-		                              $this->_component['component'], static::SUBFOLDER, 
-		                              "{$view}.php" ) );
+		$dir->close();
+
+		unset( $dir, $file, $path );
+
+		return $views;
 	}
 
 	/**
@@ -87,12 +102,13 @@ abstract class Abstraction extends Simple\Abstraction
 
 		if ( $this->hasView( $view ) )
 		{
-			include buildpath( __ROOT__, $this->_package, $this->_component['component'],
-			                   static::SUBFOLDER, "{$view}.php" );
+			include buildpath(__ROOT__, $this->_package['path'], 
+			                   $this->_package['components'][$this->_request['controller']],
+			                   static::SUBFOLDER, $view . '.php' );
 			return;
 		}
 
-		throw new UnexpectedValueException( __METHOD__ . " could not load view {$view}, it was not found in the {$this->_package}.{$this->_component['component']} package" );
+		throw new UnexpectedValueException( __METHOD__ . " could not load view {$view}, it was not found in the {$this->_package['package']}.{$this->_request['controller']}} package" );
 	}
 	
 	/**
