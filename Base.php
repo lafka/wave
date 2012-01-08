@@ -40,7 +40,7 @@
 
 namespace Fwt;
 use RecursiveDirectoryIterator, LogicException, RuntimeException, SplFileInfo,
-	DirectoryIterator;	
+	DirectoryIterator, Exception;	
 
 class Base
 {

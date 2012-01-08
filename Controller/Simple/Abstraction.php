@@ -73,6 +73,12 @@ abstract class Abstraction
 	public $base;
 
 	/**
+	 * Flag to see if views can be loaded
+	 * @var bool
+	 */
+	public $ready = true;
+
+	/**
 	 * Set basic information about component
 	 *
 	 *

@@ -68,10 +68,7 @@ try {
 		__debug( "Could not find view '{$parts['view']}' in '" . get_class( $controller ) . "'.", '__MAIN__' );
 		__debug( 'available views: ' . implode(', ', $controller->availableViews() ), '__MAIN__' );
 		Helper::loadError( 404, $controller );
-	} else {
-		//	If something wrong happend this means we shouldent load the view
-		//	this is a hack to stop unauthorized requests and similar.
-		//	@todo This should atleast check if some view has been loaded
+	} elseif ( true === $controller->ready ) {
 		$controller->loadView( $parts['view'] );
 	}
 
