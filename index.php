@@ -43,7 +43,7 @@ use \Fwt\Controller\Helper, Exception;
 
 define( '__DS__',          DIRECTORY_SEPARATOR );
 define( '__ROOT__',        __DIR__ . __DS__ );
-define( '__DEBUG_ENABLED', true );
+define( '__DEBUG_ENABLED', (array_key_exists( 'WAVE_ENV', $_SERVER ) && 'dev' === $_SERVER['WAVE_ENV']) ? true : false );
 
 include __ROOT__ . 'Fwt/Base.php';
 

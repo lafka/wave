@@ -22,12 +22,27 @@
 	$ ln -P fwt/index.php .
 
 
-	Add the rewrite rules you need for nginx it could look like this:
-	
+	Add the rewrite rules you need:
+
+	# NGINX
+
 	    if ( !-e $request_filename )
 	    {
 	        rewrite ^/(.*)$ /index.php last;
 	    }
+
+		# In your php_fpm call add this:
+			fastcgi_param WAVE_ENV production
+
+    # APACHE
+
+        RewriteEngine on
+        RewriteCond %{REQUEST_FILENAME} \.php$ [OR]
+        RewriteCond %{DOCUMENT_ROOT}/%{REQUEST_FILENAME} !-f 
+        RewriteRule . /index.php  [L] 
+
+		# Valid is production,stage,dev - if none is set production is assumed
+		SetEnv WAVE_ENV production
 
                                              
 	FIRST STEPS   ======================================================
