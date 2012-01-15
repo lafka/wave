@@ -47,7 +47,7 @@ define( '__DEBUG_ENABLED', (array_key_exists( 'WAVE_ENV', $_SERVER ) && 'dev' ==
 
 include __ROOT__ . 'Fwt/Base.php';
 
-global $_debug_array;
+(\constant('__DEBUG_ENABLED') && extension_loaded('xhprof')) && xhprof_enable(XHPROF_FLAGS_CPU | XHPROF_FLAGS_MEMORY);
 
 try {
 	$base = new Base();
@@ -61,12 +61,11 @@ try {
 	$parts	    = Helper::process( $_SERVER['REQUEST_URI'] );
 	$controller = Helper::factory( $parts, $base );
 
-
-	
 	if ( ! $controller->hasView( $parts['view'] ) )
 	{
 		__debug( "Could not find view '{$parts['view']}' in '" . get_class( $controller ) . "'.", '__MAIN__' );
 		__debug( 'available views: ' . implode(', ', $controller->availableViews() ), '__MAIN__' );
+
 		Helper::loadError( 404, $controller );
 	} elseif ( true === $controller->ready ) {
 		$controller->loadView( $parts['view'] );
@@ -89,3 +88,12 @@ try {
 	</pre><hr /><pre>{$e->getTraceAsString()}</pre></div>";
 }
 
+if (constant('__DEBUG_ENABLED') && extension_loaded('xhprof')) {
+	$result = xhprof_disable();
+	include_once '/usr/share/webapps/xhprof/xhprof_lib/utils/xhprof_lib.php';
+    include_once '/usr/share/webapps/xhprof/xhprof_lib/utils/xhprof_runs.php';
+
+    $run   = new \XHProfRuns_Default();
+    $runid = $run->save_run($result, 'events.hackeriet.org');
+    echo '<a href="'. sprintf( "http://xhprof/index.php?run=%s&source=%s", $runid, 'events.hackeriet.org') .'" target="_blank">Profiler output</a>';
+}
