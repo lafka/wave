@@ -83,12 +83,15 @@ abstract class Helper
 	}
 
 	/**
+	 * Process a URI for information
 	 *
-	 * @param Iface $controller the controller to use for processing
+	 * @param string $uri The URI to process for information
 	 * @return array parts of url
 	 */
-	public static function process ( $uri, Iface $controller = null )
+	public static function process ( $uri )
 	{
+		$uri = preg_replace('~/{2,}~', '/', $uri);
+
 		// Remove trailing slashes
 		if ( 0 === stripos( $uri, '/' ) )
 		{
@@ -110,11 +113,17 @@ abstract class Helper
 			);
 		}
 
-		$uri               = explode( '/', $uri );
-		$uri['controller'] = array_shift( $uri );
-		$uri['view']       = ( count($uri) > 1 ) ? array_shift( $uri ) : 'default';
+		$res = array();
 
-		return $uri;
+		$uri               = explode('/', trim($uri, '/'));
+		$res['controller'] = array_shift($uri);
+		$res['view']       = ( count($uri) > 1 ) ? array_shift( $uri ) : 'default';
+		$res['string']     = implode('/', $uri);
+		$res['list']       = $uri;
+
+		unset($uri);
+
+		return $res;
 	}
 		
 	/**
