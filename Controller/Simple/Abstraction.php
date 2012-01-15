@@ -56,6 +56,10 @@ abstract class Abstraction
 	 */
 	protected $_view;
 
+	/**
+	 * All available views
+	 * @var array
+	 */
 	protected $_views;
 
 	/**
@@ -129,7 +133,7 @@ abstract class Abstraction
 		for ( $i = 0, $c = count($this->_package['components']); $i < $c; $i++ )
 		{
 			$root      = buildpath( __ROOT__, $this->_package['path'] );
-			$wholename = buildpath( $root, $keys[$i], '*' );
+			$wholename = buildpath( $root, $this->_request['controller'], '*' );
 
 			$views     = Filesystem::find( "{$root} -type f  ! -name '.*' -and -name '*.php' -and ! -name 'Controller.php' -iwholename '{$wholename}'" );
 
