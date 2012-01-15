@@ -91,18 +91,8 @@ abstract class Helper
 	public static function process ( $uri )
 	{
 		$uri = preg_replace('~/{2,}~', '/', $uri);
-
 		// Remove trailing slashes
-		if ( 0 === stripos( $uri, '/' ) )
-		{
-			$uri = substr( $uri, 1 );
-		}
-
-		// Remove trailing slashes
-		if ( '/' === substr( $uri, -1 ) )
-		{
-			$uri = substr( $uri, 0, -1 );
-		}
+		$uri = trim($uri, '/');
 		
 		if ( empty( $uri ) )
 		{
@@ -117,7 +107,7 @@ abstract class Helper
 
 		$uri               = explode('/', trim($uri, '/'));
 		$res['controller'] = array_shift($uri);
-		$res['view']       = ( count($uri) > 1 ) ? array_shift( $uri ) : 'default';
+		$res['view']       = ( count($uri) >= 1 ) ? array_shift( $uri ) : 'default';
 		$res['string']     = implode('/', $uri);
 		$res['list']       = $uri;
 
