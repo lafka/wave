@@ -85,10 +85,11 @@ abstract class Helper
 	/**
 	 * Process a URI for information
 	 *
-	 * @param string $uri The URI to process for information
+	 * @param string $uri The URI  to process for
+	 * @param string $fallback The fallback controller to use
 	 * @return array parts of url
 	 */
-	public static function process ( $uri )
+	public static function process ( $uri, $fallback = null )
 	{
 		$uri = preg_replace('~/{2,}~', '/', $uri);
 		// Remove trailing slashes
@@ -98,7 +99,7 @@ abstract class Helper
 		{
 			//	Return default controller
 			return array( 
-				'controller' => static::DefaultController,
+				'controller' => null === $fallback ? static::DefaultController : $fallback,
 				'view'       => 'default',
 			);
 		}
