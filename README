@@ -13,13 +13,13 @@
 
 	INSTALL    ======================================================
 
-	To install, pull this down to your web server with the name fwt.
+	To install, pull this down to your web server 
 
-	$ git clone https://lafka@github.com/lafka/Wave.git fwt
+	$ git clone https://lafka@github.com/lafka/Wave.git
 
 	Create a link of the index file
 	
-	$ ln -P fwt/index.php .
+	$ ln -P Wave/index.php .
 
 
 	Add the rewrite rules you need:
@@ -49,25 +49,28 @@
 
 	Create a new package with some components:
 
-	mkdir -p mypkg/{hello,goodbye}
+	mkdir -p MyPkg/{Hello,Goodbye}
 
-	Create the controller and default view for each of them:
+	Create the router for it	
 	
-	touch !$/{default,controller}.php
+	touch !$/Route.php
 
 	A controller must be in namespace that corelates to the path, so your
-	controller would be named \MyPkg\{Hello,Goodbye}\Controller. The cont-
+	controller would be named \MyPkg\{Hello,Goodbye}\Route. The cont-
 	roller would also need to implement \Fwt\Controller\Iface. A stripped
 	controller would look something like this:
 
 	namespace MyPkg\Hello;
-	use Fwt\Controller\Abstraction, Fwt\Controller\Iface;
+	use Wave\Route\Iface as RouteInterface, Wave\Route\Regex as RegexRoute;
 
-	class Controller extends Abstraction implements Iface
+	class Route extends RegexRoute implements RouteInterface {
 	{
-		
+		protected $regex = '~/(?hello|good-?day)~i';
+
+		public function dispatch ($uri) {
+			echo "Good day to you!";
+		}
 	}
 
-	To add a new view you would just need to create the file and it will
-	be accessible.
+	This matches all request that starts with hello, good-day or goodday.
 

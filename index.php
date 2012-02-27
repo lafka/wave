@@ -15,62 +15,72 @@
  * @todo lafka 27-02-2012; Object freezer for Wave.Core to avoid subsequent fs scans for all requests
  */
 
-namespace Fwt;
-use \Fwt\Controller\Helper, Exception;
+namespace Wave;
+use \LogicException;
 
-define( '__DS__',          DIRECTORY_SEPARATOR );
-define( '__ROOT__',        __DIR__ . __DS__ );
-define( '__DEBUG_ENABLED', (array_key_exists( 'WAVE_ENV', $_SERVER ) && 'dev' === $_SERVER['WAVE_ENV']) ? true : false );
+define( '__DEBUG_ENABLED__', (array_key_exists( 'WAVE_ENV', $_SERVER ) && 'dev' === $_SERVER['WAVE_ENV']) ? true : false );
 
-include __ROOT__ . 'Fwt/Base.php';
+include 'Wave/Core.php';
 
-(\constant('__DEBUG_ENABLED') && extension_loaded('xhprof')) && xhprof_enable(XHPROF_FLAGS_CPU | XHPROF_FLAGS_MEMORY);
+// Enable profiling if debug is on
+(constant('__DEBUG_ENABLED__') && extension_loaded('xhprof')) && xhprof_enable(XHPROF_FLAGS_CPU | XHPROF_FLAGS_MEMORY);
 
 try {
-	$base = new Base();
-	$base->init();
-	$base->parsePackages();
+	$core = new Core();
 
 	ob_start();
-	//session_name( 'wave.key' );
+	session_name( 'wsk' );
 	session_start();
-	
-	$parts	    = Helper::process( $_SERVER['REQUEST_URI'] );
+
+	$authenticated = isset($_SESSION) && array_key_exists( 'user_id', $_SESSION );
+
+	$core->parsePackages();
+
+	$code = 404;
+
+	// Find me some routes
+	$routes = glob('*/*/Route.php');
+	for ($i = 0, $c = count($routes); $i < $c; $i++) {
+		$routes[$i] = substr( strtr(Autoloader::parseToPath($routes[$i]), '/', '\\'), 0, -4);
+		$route = new $routes[$i]($core, null);
+
+		if ($route->match ($_SERVER['REQUEST_URI'])) {
+			$code = $route->dispatch($_SERVER['REQUEST_URI']);
+			break;
+		}
+
+		unset($route);
+	}
+
+	if ($code !== 200) {
+		// Do crazyness and display error
+		spl_autoload_call('resources/error/' . $code);
+	}
+
+	$content = ob_get_clean();
+	//	We can use autoload call to load templates
+	spl_autoload_call('resources/layout/header');
+	echo $content;
+	spl_autoload_call('resources/layout/footer');
+
+	define('__RUNTIME_DONE__', true );
+	/*
+	$parts	    = Helper::process( $_SERVER['REQUEST_URI'], ($authenticated) ? 'nodes' : null  );
 	$controller = Helper::factory( $parts, $base );
 
 	if ( ! $controller->hasView( $parts['view'] ) )
 	{
 		__debug( "Could not find view '{$parts['view']}' in '" . get_class( $controller ) . "'.", '__MAIN__' );
 		__debug( 'available views: ' . implode(', ', $controller->availableViews() ), '__MAIN__' );
-
 		Helper::loadError( 404, $controller );
-	} elseif ( true === $controller->ready ) {
+	} else {
+		__debug( "loading {$parts['package']['path']}.{$parts['controller']}->{$parts['view']}", 'main' );
 		$controller->loadView( $parts['view'] );
 	}
-
-	$content = ob_get_clean();
-
-	include 'presentation/header.php';
-	echo $content;
-	include 'presentation/footer.php';
-
-	// Where done
-	define('__RUNTIME_DONE', true );
+	*/
 } catch ( LogicException $e ) {
-	// This means code breakage
-	header( "Status: 500" );
-	echo "<div class=\"error\"><pre>
-	{$e->getMessage()}<hr />
-	in {$e->getFile()} on line {$e->getLine()}
-	</pre><hr /><pre>{$e->getTraceAsString()}</pre></div>";
+	__fatalexception($e);
 }
 
-if (constant('__DEBUG_ENABLED') && extension_loaded('xhprof')) {
-	$result = xhprof_disable();
-	include_once '/usr/share/webapps/xhprof/xhprof_lib/utils/xhprof_lib.php';
-    include_once '/usr/share/webapps/xhprof/xhprof_lib/utils/xhprof_runs.php';
 
-    $run   = new \XHProfRuns_Default();
-    $runid = $run->save_run($result, 'events.hackeriet.org');
-    echo '<a href="'. sprintf( "http://xhprof/index.php?run=%s&source=%s", $runid, 'events.hackeriet.org') .'" target="_blank">Profiler output</a>';
-}
+(constant('__DEBUG_ENABLED__') && extension_loaded('xhprof')) && __xhprof_output();
