@@ -1,15 +1,17 @@
 <?php
 /**
- * Wave PPHPPSADSAD
- * @todo fill in license
+ * Wave PHP
+ *
+ * Copyright (c) 2010 - 2011 Frengstad Web Teknologi and contributors  
+ * All rights reserved
  *
  * Functions for building paths
  *
- * @package   wave
- * @version   0.1
- * @author    Olav Frengstad <olav@fwt.no>
- * @copyright Frengstad Web Teknologi
- * @license   BSD
+ * @package	  wave
+ * @version	  0.2
+ * @copyright Frengstad Web Teknologi	
+ * @author	  Olav Frengstad <olav@fwt.no>
+ * @license	  ./LICENSE BSD 3-Clause License
  */
 
 /**
