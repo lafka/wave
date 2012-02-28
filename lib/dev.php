@@ -84,14 +84,15 @@ function __debug_globals () {
  * @return void
  */
 function __fatalexception (Exception $e) {
+	ob_end_clean();
 	// This means code breakage
 	header( "HTTP/1.1 500 Internal Server Error" );
 	echo "<!DOCTYPE html>\n";
 	echo "<html>\n";
 	echo "\t<head>\n";
-	echo "\t<title>A seriouse error occured</head>\n";
+	echo "\t<title>A seriouse error occured</title>\n";
 	echo "\t</head>\n";
-	echo "<\tbody>\n";
+	echo "\t<body>\n";
 	echo "\t\t<div class=\"error\"><pre>
 	{$e->getMessage()}<hr />
 	in {$e->getFile()} on line {$e->getLine()}
