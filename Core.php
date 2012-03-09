@@ -155,38 +155,6 @@ class Core
 	}
 
 	/**
-	 * Autoload with namespaces
-	 *
-	 * This does not comply with PSR-0 since there are multiple classpaths that
-	 * is used within Wave. Instead we look by default in a PSR-0 compliant way
-	 * if the class is found, if not a scan of all packages is done.
-	 * 
-	 * In more practical terms this means a a package name can be substituted
-	 * on runtime. E.g wave-auth is really the wave package. This does only
-	 * work with names concatenated with hyphens (everything after the first
-	 * hyphen will be discarded)
-	 *
-	 * @param string $class The classname to load
-	 * @return bool Status of autoload
-	 * @todo lafa; Add option to act as exclusive autoloader and catch non-existing classes gracefully
-	 */
-	public function autoload ( $class, array $packages = null )
-	{
-		$file = str_replace( '\\', '/', $class) . '.php';
-
-		if( is_readable( __ROOT__ . $file ) )
-		{
-			
-			__debug( "loaded class '{$class}' from file '{$file}'", 'autoload' );
-			include __ROOT__ . $file;
-			return true;
-		}
-
-		__debug( "could not autoload class {$class} (tried: ".__ROOT__."{$file})", 'autoload');
-		return false;
-	}
-
-	/**
 	 * Scan for packages
 	 *
 	 * Adds all basefolder (with exceptions*) as packages and scans them for
@@ -225,6 +193,13 @@ class Core
 	public function packages ()
 	{
 		return $this->_packages;
+	}
+
+	public function package ($package) {
+		$package = Autoloader::parseTopath($package);
+		if (!isset($this->_packages[$package]))
+			return false;
+		return $this->_packages[$package];
 	}
 
 	public function __destruct ()
