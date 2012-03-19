@@ -4,11 +4,11 @@
 	  \ V  V / (_| |\ V /  __/ |  __/|  _  |  __/ 
 	   \_/\_/ \__,_| \_/ \___| |_|   |_| |_|_|    
 
-	A quick and uncluttered way to setup a MVC-like enviroment in PHP
-	it consists of packages with different components beneath. 
-	Each component can be though of as a controller with corresponding
-	views, there is no models as this is only used to create structure
-	and it's up to you to fill in the blanks.
+	A quick and uncluttered way to setup a structure for routing requests.
+	Wave can be though of as a mini-toolkit with a autoloader implementation,
+	it makes structuring multiple libraries/frameworks together an easy task
+	and allows developers to focus on the business logic rather than trying
+	to make the tools behave they want.
 
 
 	INSTALL    ======================================================
@@ -32,7 +32,7 @@
 	    }
 
 		# In your php_fpm call add this:
-			fastcgi_param WAVE_ENV production
+            fastcgi_param WAVE_ENV production
 
     # APACHE
 
@@ -47,7 +47,7 @@
                                              
 	FIRST STEPS   ======================================================
 
-	Create a new package with some components:
+	Create a new package with some routes:
 
 	mkdir -p MyPkg/{Hello,Goodbye}
 
@@ -55,10 +55,11 @@
 	
 	touch !$/Route.php
 
-	A controller must be in namespace that corelates to the path, so your
-	controller would be named \MyPkg\{Hello,Goodbye}\Route. The cont-
-	roller would also need to implement \Fwt\Controller\Iface. A stripped
-	controller would look something like this:
+	A controller must be in the namespace that corelates to the path, so
+	your controller would be named \MyPkg\{Hello,Goodbye}\Route. The route
+	will also need to implement \Wave\Route\Iface. A stripped router would
+	look something like this (RegEx route is a predefined route which can be
+	used to match Regexes with the URL):
 
 	namespace MyPkg\Hello;
 	use Wave\Route\Iface as RouteInterface, Wave\Route\Regex as RegexRoute;
