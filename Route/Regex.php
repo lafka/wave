@@ -26,7 +26,9 @@ abstract class Regex extends Traceable {
 	protected $core  = null;
 
 	/**
-	 * Route for resources
+	 * Route for matching regexes
+	 *
+	 * @param \Wave\Core $core The core object 
 	 * @param string $uri A refined regex for matching resources
 	 * @return \Wave\Lib\Resources\Route The route
 	 */

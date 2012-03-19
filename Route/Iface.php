@@ -27,7 +27,8 @@ interface Iface {
     /**
      * Initializes a route
      *
-     * @param string $uri The dispatched uri
+     * @param \Wave\Core $core The core object 
+     * @param mixed $options Additional options to send to route
      * @return \Wave\Route\Iface
      */
 	public function __construct (\Wave\Core $core, $uri = null);
