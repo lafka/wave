@@ -52,7 +52,7 @@ class Core
 		require __DIR__ . '/lib/array.php';
 		require __DIR__ . '/lib/fs.php';
 		require __DIR__ . '/lib/dev.php';
-		require 'Wave/Autoloader.php';
+		require __DIR__ . '/Autoloader.php';
 
 		__debug( 'initiated base class (' . __CLASS__ . ').', 'main' );
 
@@ -80,6 +80,9 @@ class Core
 		// Set error handler
 		set_error_handler( array( $this, 'errorHandler' ) );
 		set_exception_handler( array( $this, 'exceptionHandler' ) );
+
+		mb_internal_encoding('utf-8');
+		date_default_timezone_set('UTC');
 
 		__debug( 'finished bootstrap sequence', 'main-init' );
 	}

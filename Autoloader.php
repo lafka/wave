@@ -131,7 +131,6 @@
  		$path = str_replace(strtr($this->ns, '\\', '/'), $this->path, $path);
 
  		if (!is_readable($path)) {
- 			__debug( "expected resource {$resource} to be available at {$path} but was not found", "autoload[{$this->ns}]");
  			return false;
  		} elseif (is_dir($path)) {
  			return false;
@@ -139,6 +138,7 @@
  		
  		!$return && include $path;
 
+ 		__debug( "found resource {$resource} at {$path}", "autoload[{$this->ns}]");
  		return ($return) ? $path : true;
  	}
 

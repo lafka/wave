@@ -20,10 +20,15 @@ namespace Wave;
 use \RuntimeException, \RecursiveIteratorIterator, \RecursiveDirectoryIterator, \DirectoryIterator, \FilesystemIterator,
     \Wave\Object\Traceable;
 
+/**
+ * @property-read \Wave\Autoloader $autoloader The autoloader for this package
+ */
 class Package extends Traceable {
-	protected $path;
-	protected $package;
-	protected static $packageList;
+	public $path;
+
+	public $package;
+
+	public static $packageList;
 	/**
 	 * Autoloader instance
 	 *
@@ -37,7 +42,7 @@ class Package extends Traceable {
 	 * @param string $path The relative path to package from current working directory
 	 * @return \Wave\Package
 	 */
-	protected function __construct ($path) {
+	public function __construct ($path) {
 		if ( !is_dir($path) )
 			throw new RuntimeException("Given path was did not exists or was not a directory");
 
@@ -75,8 +80,13 @@ class Package extends Traceable {
 			if (static::instanceExists($keys[$i]))
 				continue;
 
-			$obj = new Package($items[$keys[$i]]);
-			$obj->instanceRegister($keys[$i]);
+			$class = '\Wave\Package';
+			if (is_readable($items[$keys[$i]] . '/Package.php')) {
+				$class = str_replace('/', '\\', Autoloader::parseToPath($path) . '/' . 'Package');
+				class_exists($class) || include $items[$keys[$i]] . '/Package.php';
+			}
+			$obj = new $class($items[$keys[$i]]);
+			$obj->instanceRegister($keys[$i], __CLASS__);
 		}
 
 		return static::instanceGet($path);
@@ -106,6 +116,8 @@ class Package extends Traceable {
 	public function __get ($key) {
 		if ('autoloader' === $key)
 			return $this->_autoloader;	
+
+		return;
 	}
 
 	public function __destruct () {

@@ -41,17 +41,18 @@ abstract class Traceable implements Countable
  	 * Register a new instance of a class
  	 *
  	 * @param [string $key The key to use for uniqueness, will use object hash if empty]
+ 	 * @param  string $key The class name to use for storage
  	 * @return string The key used to store object
  	 */
- 	public function instanceRegister ($key = '') {
- 		$class = get_class($this);
+ 	public function instanceRegister ($key = '', $class = null) {
+ 		$class = null === $class ? get_class($this) : $class;
  		$key   = empty($key) ? spl_object_hash($this) : $key;
 
  		if (!isset(static::$trace[$class]))
  			static::$trace[$class] = (true === $this->storeObjects) ? array() : 0;
 
-		true  === $this->storeObjects && static::$trace[$class][$key] = $this;
-		false === $this->storeObjects && static::$trace[$class]++;
+		(true  === $this->storeObjects) && static::$trace[$class][$key] = $this;
+		(false === $this->storeObjects) && static::$trace[$class]++;
 
  		return $key;
  	}
