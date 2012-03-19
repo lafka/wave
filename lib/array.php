@@ -79,11 +79,11 @@ function array_merge_distinct( array $arr )
 {
 	$argv = func_get_args();
 
-	array_walk( $argv, function ($array) use (&$arr) {
+	array_walk($argv, function ($array) use (&$arr) {
 		$keys = array_keys( $array );
 
 		for ( $i = 0, $c = count($keys); $i < $c; $i++ )
-			if ( array_key_exists( $keys[$i], $arr ) )
+			if ( array_key_exists($keys[$i], $arr ) )
 				$arr[$keys[$i]] = $array[$keys[$i]];
 	});
 
@@ -94,14 +94,35 @@ function array_merge_distinct( array $arr )
 
 /**
  * Filter an array based on value matching regex
+ *
+ * @param array $array The array to filter
+ * @param string $regex The regex to filter on
+ * @param array The filtered array
  */
 function array_filter_regex ($array, $regex) {
-	return array_filter( $array, function ($value) use ($regex) { 
+	return array_filter($array, function ($value) use ($regex) { 
 		return 0 !== preg_match($regex, $value);
 	});
 }
 
-
+/**
+ * Filter an array based on key matching regex
+ *
+ * @param array $array The array to filter
+ * @param string $regex The regex to filter on
+ * @param array The filtered array
+ */
 function array_filter_regex_key ($array, $regex) {
 	return array_intersect_key($array, array_flip(array_filter_regex(array_keys($array), $regex)));
+}
+
+/**
+ * Filter out all elements from $array that does not inherit from $type 
+ *
+ * @param array $array A array containing possible matches
+ * @param string $type The class name to check for
+ * @return array The filtered array
+ */
+function array_filter_class ($array, $type) {
+	return array_filter($array, function ($value) use ($type) { return is_a($value, $type); });
 }
