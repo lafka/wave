@@ -32,7 +32,7 @@ abstract class Regex extends Traceable {
 	 * @param string $uri A refined regex for matching resources
 	 * @return \Wave\Lib\Resources\Route The route
 	 */
-	public function __construct (\Wave\Core $core, $uri = null ) {
+	public function __construct (\Wave\Core $core, $uri = null) {
 		$this->core = $core;
 		null !== $uri && $this->regex = $uri;
 		$this->instanceRegister($uri);
