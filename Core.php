@@ -49,6 +49,9 @@ class Core
 	 */
 	public function __construct ()
 	{
+		if (!defined('__DEBUG_ENABLED__'))
+			define('__DEBUG_ENABLED__', false);
+
 		require __DIR__ . '/lib/array.php';
 		require __DIR__ . '/lib/fs.php';
 		require __DIR__ . '/lib/dev.php';
@@ -150,9 +153,6 @@ class Core
 			__debug_output();
 			__debug_globals();
 		}
-
-		if (!defined('__RUNTIME_DONE__'))
-			header( "HTTP/1.1 500 Internal Server Error" );
 
 		unset( $this );
 	}
