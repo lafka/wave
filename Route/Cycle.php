@@ -31,7 +31,7 @@ class Cycle extends Traceable implements Countable {
 	 * The current route being matched
 	 * @var \Wave\Route\Iface
 	 */
-	protected $pointer;
+	public $pointer;
 
 	/**
 	 * Lis of routes
