@@ -84,6 +84,13 @@ class Package extends Traceable {
 			if (is_readable($items[$keys[$i]] . '/Package.php')) {
 				$class = str_replace('/', '\\', Autoloader::parseToPath($path) . '/' . 'Package');
 				class_exists($class) || include $items[$keys[$i]] . '/Package.php';
+			} elseif (is_readable($items[$keys[$i]] . '.php')) {
+				include $items[$keys[$i]] . '.php';
+
+				//	The bootstrap might not be a class, therefor we check for the class and if not
+				//	pass control back to the default package handler.
+				if (class_exists($items[$keys[$i]], false))
+					$class = $items[$keys[$i]];
 			}
 			$obj = new $class($items[$keys[$i]]);
 			$obj->instanceRegister($keys[$i], __CLASS__);
