@@ -57,6 +57,7 @@ abstract class Annotated extends Rails{
 		for ($i = 0, $c = count($k); $i < $c; $i++) {
 			if (preg_match($this->routes[$k[$i]]['regex'], $uri, $m)) {
 				$this->req['param'] = array_intersect_key($m, array_flip($this->routes[$k[$i]]['params']));
+				array_walk($this->req['param'], function (&$v) { $v = filter_var(FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW); });
 				return true;
 			}
 		}
