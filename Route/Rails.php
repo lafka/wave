@@ -99,11 +99,11 @@ class Rails {
 	protected function registerRoute ($route, $method = null) {
 		$key = md5($route);
 
-		preg_match_all('~/:([^/]+)/?~', $route, $params);
+		preg_match_all('~/:([^/]+)?~', $route, $params);
 
 		$this->routes[$key] = array(
 			'route'  => $route,
-			'regex'  => "#" . preg_replace('~/:([^/]+)/?~', '/(?P<\1>[^/]+)(?:/?$|/)', $route) . "#",
+			'regex'  => "#" . preg_replace('~/:([^/]+)~', '/(?P<\1>[^/]+)', $route) . "#",
 			'method' => $method,
 			'params' => $params[1],
 		);
