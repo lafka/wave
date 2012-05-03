@@ -41,8 +41,8 @@ abstract class Annotated extends Rails{
 		preg_match_all('/@([A-Z]+) (.+)/', $reflection->getDocComment(), $m);
 
 		for ($i = 0, $c = count($m[1]); $i < $c; $i++)
-			if ($_SERVER['REQUEST_METHOD'] === $m[1][$i])
-				$this->registerRoute($m[2][$i]);
+				$this->registerRoute(trim($m[2][$i]), $m[1][$i]);
+
 	}
 
 	/**
@@ -53,13 +53,18 @@ abstract class Annotated extends Rails{
 	 */
 	public function match ($uri = null) {
 		$k = array_keys($this->routes);
-
+		
 		for ($i = 0, $c = count($k); $i < $c; $i++) {
 			if (preg_match($this->routes[$k[$i]]['regex'], $uri, $m)) {
-				$this->req['param'] = array_intersect_key($m, array_flip($this->routes[$k[$i]]['params']));
-				array_walk($this->req['param'], function (&$v) { $v = filter_var(FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW); });
+				$this->req['param']  = array_intersect_key($m, array_flip($this->routes[$k[$i]]['params']));
+				$this->req['method'] = $_SERVER['REQUEST_METHOD'];
+				$this->req['uri']    = $_SERVER['REQUEST_URI'];
+
+				array_walk($this->req['param'], function (&$v) { $v = filter_var($v, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW); });
 				return true;
 			}
 		}
+
+		return false;
 	}
 }

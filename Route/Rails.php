@@ -41,7 +41,7 @@ class Rails {
 	 *
 	 * @var array
 	 */
-	protected $routes;
+	protected $routes = array();
 
 	/**
 	 * Request information
@@ -94,10 +94,10 @@ class Rails {
 	 *
 	 * @param string $route The new route to add
 	 * @param string $method Method to match on or null to perform on all
-	 * @return void
+	 * @return string Key to use to refetch route from {@link Rails::$routes}
 	 */
 	protected function registerRoute ($route, $method = null) {
-		$key = md5($route);
+		$key = md5($method . "-" . $route);
 
 		preg_match_all('~/:([^/]+)?~', $route, $params);
 
@@ -108,6 +108,8 @@ class Rails {
 			'params' => $params[1],
 		);
 
-		unset($key, $params, $route, $method);
+		unset($params, $route, $method);
+
+		return $key;
 	}
 }
