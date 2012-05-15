@@ -26,6 +26,12 @@ abstract class Regex extends Traceable {
 	protected $core  = null;
 
 	/**
+	 * Match results from preg_match
+	 * @var array
+	 */
+	protected $matches;
+
+	/**
 	 * Route for matching regexes
 	 *
 	 * @param \Wave\Core $core The core object 
@@ -44,7 +50,7 @@ abstract class Regex extends Traceable {
 	 * @return boolean Status of match
 	 */
 	public function match ($uri) {
-		return 0 !== preg_match($this->regex, $uri);
+		return 0 !== preg_match($this->regex, $uri, $this->matches);
 	}
 
 	public function __destruct () {
