@@ -149,7 +149,7 @@ class Core
 	 */
 	public function shutdown ()
 	{
-		if ( __DEBUG_ENABLED__ && null === constant('__RUNTIME_DONE__') )
+		if ( __DEBUG_ENABLED__ && null === __RUNTIME_DONE__ )
 		{
 			__debug_output();
 			__debug_globals();
