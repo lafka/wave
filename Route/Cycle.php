@@ -79,7 +79,7 @@ class Cycle extends Traceable implements Countable {
 	 */
 	public function match ($uri) {
 		for ($i = 0, $c = count($this); $i < $c; $i++) {
-			if ($this->routes[$i]->match ($_SERVER['REQUEST_URI'])) {
+			if ($this->routes[$i]->match ($uri)) {
 				$this->pointer = $this->routes[$i];
 				return true;
 			}
