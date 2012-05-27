@@ -19,7 +19,12 @@ namespace Wave\Route;
 
 use ReflectionClass;
 
-abstract class Annotated extends Rails{
+abstract class Annotated extends Rails {
+
+	protected $options = array(
+		//	Allow that this->var points to $_GET[var] if not set in URI
+		'alignQueryParams' => true,
+	);
 
 	/**
 	 * @var \Wave\Core
@@ -40,9 +45,27 @@ abstract class Annotated extends Rails{
 		$reflection = new ReflectionClass(get_called_class());
 		preg_match_all('/@([A-Z]+) (.+)/', $reflection->getDocComment(), $m);
 
-		for ($i = 0, $c = count($m[1]); $i < $c; $i++)
+		for ($i = 0, $c = count($m[1]); $i < $c; $i++) {
+			if ($m[1][$i] === $_SERVER['REQUEST_METHOD'])
 				$this->registerRoute(trim($m[2][$i]), $m[1][$i]);
+		}
+	}
 
+	/**
+	 * Get a request parameter
+	 *
+	 * @param string $k The key to get
+	 * @return string The value of param $k or empty string
+	 */
+	public function __get ($k) {
+		if (!$this->options['alignQueryParams'])
+			return parent::__get($k);
+
+
+		if ('' === ($v = parent::__get($k)) && isset($_GET[$k]))
+			return $_GET[$k];
+
+		return $v;
 	}
 
 	/**
