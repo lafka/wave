@@ -103,7 +103,7 @@ class Rails {
 
 		$this->routes[$key] = array(
 			'route'  => $route,
-			'regex'  => "#" . preg_replace('~/:([^/]+)~', '/(?P<\1>[^/]+)', $route) . "#",
+			'regex'  => "#^" . preg_replace('~/:([^/]+)~', '/(?P<\1>[^/]+)', $route) . "#",
 			'method' => $method,
 			'params' => $params[1],
 		);
