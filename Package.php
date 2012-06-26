@@ -82,9 +82,11 @@ class Package extends Traceable {
 
 			$class = '\Wave\Package';
 			if (is_readable($items[$keys[$i]] . '/Package.php')) {
+				__debug(sprintf("package %s: using %s for package handler", $path, $items[$keys[$i]] . '/Package.php'));
 				$class = str_replace('/', '\\', Autoloader::parseToPath($path) . '/' . 'Package');
 				class_exists($class) || include $items[$keys[$i]] . '/Package.php';
 			} elseif (is_readable($items[$keys[$i]] . '.php')) {
+				__debug(sprintf("package %s: using %s for package handler", $path, $items[$keys[$i]] . '.php'));
 				include $items[$keys[$i]] . '.php';
 
 				//	The bootstrap might not be a class, therefor we check for the class and if not
