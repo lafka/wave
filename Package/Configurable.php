@@ -47,7 +47,8 @@ abstract class Configurable extends \Wave\Package {
 		// Set default from prod
 		if ($this->env !== 'prod') {
 			foreach ($ini['prod'] as $k => $v) {
-				$ini[$this->env][$k] = $v;
+				if (!isset($ini[$this->env][$k]))
+					$ini[$this->env][$k] = $v;
 			}
 		}
 
