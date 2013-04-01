@@ -56,6 +56,7 @@ class Core
 		require __DIR__ . '/lib/fs.php';
 		require __DIR__ . '/lib/dev.php';
 		require __DIR__ . '/lib/uri.php';
+		require __DIR__ . '/lib/http.php';
 		require __DIR__ . '/Autoloader.php';
 
 		__debug( 'initiated base class (' . __CLASS__ . ').', 'main' );
